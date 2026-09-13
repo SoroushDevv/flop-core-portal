@@ -2,6 +2,7 @@ import React from "react";
 import { GridScan } from "@/components/visualizers/GridScan";
 import { Header } from "@/components/layout/Header";
 import { FLOP_CONFIG } from "@/lib/constants";
+import { FlopUniverse } from "@/components/visualizers/FlopUniverse";
 
 export default function CorridorsPage() {
   return (
@@ -32,6 +33,7 @@ export default function CorridorsPage() {
             </div>
           </div>
         </div>
+        <FlopUniverse />
       </div>
     </main>
   );
