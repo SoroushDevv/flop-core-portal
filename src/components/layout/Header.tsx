@@ -42,6 +42,11 @@ export const Header: React.FC = () => {
       label: "TOOLS",
       items: [
         {
+          href: "/dna",
+          label: "AGENT DNA & PASSPORT",
+          desc: "5D Identity, Voice Synthesis & Card",
+        },
+        {
           href: "/calculator",
           label: "$FLOP CALCULATOR",
           desc: "FDV & 18.1B tokenomics simulator",
@@ -66,7 +71,6 @@ export const Header: React.FC = () => {
     },
   ];
 
-  // بستن دراپ‌داون در صورت کلیک بیرون از منو
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
@@ -79,7 +83,6 @@ export const Header: React.FC = () => {
 
   return (
     <header className="flex flex-col md:flex-row items-center justify-between py-6 border-b border-[#2F293A] relative z-30 gap-4">
-      {/* برند و لوگو */}
       <Link href="/" className="flex items-center gap-3 group">
         <div className="p-2 rounded-lg bg-[#0B0F19] border border-[#00B4D8]/30 shadow-[0_0_15px_rgba(0,180,216,0.3)] group-hover:border-[#00B4D8] transition-colors">
           <Cpu className="w-5 h-5 text-[#00B4D8]" />
@@ -89,10 +92,8 @@ export const Header: React.FC = () => {
         </div>
       </Link>
 
-      {/* منوی ناوبری اصلی */}
       <nav ref={navRef} className="flex flex-wrap items-center gap-2">
         {categories.map((cat) => {
-          // تب‌های ساده تک‌لینکی
           if (cat.href) {
             const isActive = pathname === cat.href;
             return (
@@ -110,7 +111,6 @@ export const Header: React.FC = () => {
             );
           }
 
-          // تب‌های دارای زیرمجموعه (Dropdown)
           const isDropdownActive = cat.items?.some((i) => pathname === i.href);
           const isOpen = openDropdown === cat.id;
 
@@ -133,9 +133,8 @@ export const Header: React.FC = () => {
                 />
               </button>
 
-              {/* پنل بازشونده دراپ‌داون */}
               {isOpen && cat.items && (
-                <div className="absolute top-full mt-2 left-0 min-w-[220px] bg-[#070B14]/95 border border-[#00B4D8]/40 rounded-xl p-2 shadow-[0_10px_30px_rgba(0,0,0,0.8),0_0_20px_rgba(0,180,216,0.2)] backdrop-blur-md z-50 animate-fade-in font-mono">
+                <div className="absolute top-full mt-2 left-0 min-w-[240px] bg-[#070B14]/95 border border-[#00B4D8]/40 rounded-xl p-2 shadow-[0_10px_30px_rgba(0,0,0,0.8),0_0_20px_rgba(0,180,216,0.2)] backdrop-blur-md z-50 animate-fade-in font-mono">
                   {cat.items.map((sub) => {
                     const isSubActive = pathname === sub.href;
                     return (
