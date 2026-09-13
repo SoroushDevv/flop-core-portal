@@ -3,7 +3,6 @@ import { GridScan } from "@/components/visualizers/GridScan";
 import { Header } from "@/components/layout/Header";
 import { FLOP_CONFIG } from "@/lib/constants";
 import { FlopUniverse } from "@/components/visualizers/FlopUniverse";
-import { Footer } from "@/components/layout/Footer";
 
 export default function CorridorsPage() {
   return (
@@ -36,7 +35,6 @@ export default function CorridorsPage() {
         </div>
         <FlopUniverse />
       </div>
-      <Footer/>
     </main>
   );
 }
