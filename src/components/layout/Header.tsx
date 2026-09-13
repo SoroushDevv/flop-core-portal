@@ -14,6 +14,7 @@ export const Header: React.FC = () => {
     { href: "/calculator", label: "$FLOP CALCULATOR" },
     { href: "/sonnet", label: "100K SONNET" },
     { href: "/runner", label: "AGENT RUNNER" },
+    { href: "/flip-flop", label: "FLIP / FLOP" },
   ];
 
   return (
