@@ -2,36 +2,113 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Compass, Eye } from "lucide-react";
+import { Globe2, Rocket, Sparkles } from "lucide-react";
 
-interface Building {
+interface Planet {
   id: string;
   name: string;
   desc: string;
+  route: string;
+  color: string;
+  glowColor: string;
+  size: number;
+  orbitRadiusX: number;
+  orbitRadiusY: number;
+  speed: number;
+  angle: number;
+  ring?: boolean;
+}
+
+interface Spaceship {
+  did: string;
   x: number;
   y: number;
-  width: number;
-  height: number;
-  depth: number;
+  vx: number;
+  vy: number;
+  angle: number;
   color: string;
-  route: string;
+  isHost?: boolean;
 }
 
 export const FlopUniverse: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const router = useRouter();
-  const [hoveredBuilding, setHoveredBuilding] = useState<Building | null>(null);
-  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+  const [hoveredPlanet, setHoveredPlanet] = useState<Planet | null>(null);
+  const [warpingTarget, setWarpingTarget] = useState<string | null>(null);
 
-  // ساختمان‌های شهری با پالت نئونی سای‌فای
-  const buildings: Building[] = [
-    { id: "lobby", name: "CENTRAL LOBBY", desc: "Main Agent Gateway & Consensus Chamber", x: 400, y: 220, width: 80, height: 110, depth: 70, color: "#00B4D8", route: "/corridors" },
-    { id: "kibble", name: "KIBBLE SECTOR", desc: "A2A Raw Token Stream & Execution Feed", x: 180, y: 150, width: 65, height: 80, depth: 55, color: "#90E0EF", route: "/corridors" },
-    { id: "validators", name: "VALIDATOR CITADEL", desc: "PoUI Verification Nodes & Trace Aggregators", x: 620, y: 160, width: 70, height: 95, depth: 60, color: "#FF9FFC", route: "/corridors" },
-    { id: "gpu-miners", name: "GPU CLUSTER", desc: "Decentralized Compute & Topology Grid", x: 230, y: 340, width: 65, height: 70, depth: 55, color: "#00B4D8", route: "/corridors" },
-    { id: "sonnet-arena", name: "SONNET COLISEUM", desc: "100k FLOP Agent Battle Arena", x: 570, y: 330, width: 85, height: 85, depth: 75, color: "#FF9FFC", route: "/sonnet" },
-    { id: "treasury", name: "TOKEN MATRIX", desc: "18.1B Genesis Distribution Vault", x: 400, y: 390, width: 70, height: 60, depth: 55, color: "#90E0EF", route: "/calculator" },
-  ];
+  // مشخصات سیارات منظومه Flop
+  const planetsRef = useRef<Planet[]>([
+    {
+      id: "lobby",
+      name: "CENTRAL LOBBY",
+      desc: "Agent Consensus & Core Gateway",
+      route: "/corridors",
+      color: "#00B4D8",
+      glowColor: "rgba(0, 180, 216, 0.6)",
+      size: 14,
+      orbitRadiusX: 110,
+      orbitRadiusY: 60,
+      speed: 0.012,
+      angle: 0,
+      ring: true,
+    },
+    {
+      id: "sonnet",
+      name: "SONNET COLISEUM",
+      desc: "100k FLOP Agent Battle Arena",
+      route: "/sonnet",
+      color: "#FF9FFC",
+      glowColor: "rgba(255, 159, 252, 0.6)",
+      size: 16,
+      orbitRadiusX: 180,
+      orbitRadiusY: 95,
+      speed: 0.008,
+      angle: 1.8,
+      ring: false,
+    },
+    {
+      id: "treasury",
+      name: "TOKEN TREASURY",
+      desc: "18.1B Supply & Airdrop Matrix",
+      route: "/calculator",
+      color: "#90E0EF",
+      glowColor: "rgba(144, 224, 239, 0.5)",
+      size: 13,
+      orbitRadiusX: 250,
+      orbitRadiusY: 130,
+      speed: 0.005,
+      angle: 3.5,
+      ring: true,
+    },
+    {
+      id: "gpu",
+      name: "GPU MINING CLUSTER",
+      desc: "Distributed PoUI Compute Grid",
+      route: "/corridors",
+      color: "#38BDF8",
+      glowColor: "rgba(56, 189, 248, 0.5)",
+      size: 12,
+      orbitRadiusX: 310,
+      orbitRadiusY: 160,
+      speed: 0.004,
+      angle: 4.9,
+      ring: false,
+    },
+    {
+      id: "validators",
+      name: "VALIDATOR CITADEL",
+      desc: "Signature & Receipt Aggregators",
+      route: "/corridors",
+      color: "#A78BFA",
+      glowColor: "rgba(167, 139, 250, 0.5)",
+      size: 15,
+      orbitRadiusX: 370,
+      orbitRadiusY: 190,
+      speed: 0.003,
+      angle: 0.8,
+      ring: true,
+    },
+  ]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -40,306 +117,319 @@ export const FlopUniverse: React.FC = () => {
     if (!ctx) return;
 
     let animId: number;
+    let starPulse = 0;
 
-    // موقعیت آواتار رباتیک شما
-    const robot = {
+    // ایجاد استارها در پس‌زمینه کهکشان
+    const stars = Array.from({ length: 90 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.2,
+      alpha: Math.random() * 0.8 + 0.2,
+    }));
+
+    // ایجاد ناوگان سفینه‌های گشت‌زنی ایجنت‌ها
+    const ships: Spaceship[] = [
+      { did: "z6Mkh...", x: 200, y: 150, vx: 0.8, vy: 0.4, angle: 0, color: "#00B4D8" },
+      { did: "z6Mpo...", x: 600, y: 350, vx: -0.6, vy: -0.5, angle: 0, color: "#FF9FFC" },
+      { did: "z6Mtx...", x: 450, y: 100, vx: 0.5, vy: -0.7, angle: 0, color: "#90E0EF" },
+      { did: "z6Mqy...", x: 300, y: 400, vx: -0.7, vy: 0.3, angle: 0, color: "#A78BFA" },
+    ];
+
+    // سفینه پرچمدار شما (Host Flagship)
+    const hostShip = {
       x: 400,
-      y: 280,
+      y: 300,
       targetX: 400,
-      targetY: 280,
-      speed: 4,
+      targetY: 300,
+      speed: 5,
+      angle: 0,
       targetRoute: "",
-      isMoving: false,
-      glowAngle: 0
+      isWarping: false,
     };
 
-    const toIso = (x: number, y: number, z: number = 0) => {
-      // نگاشت ایزومتریک زاویه‌دار
-      const isoX = x - y * 0.4;
-      const isoY = (x * 0.25 + y * 0.5) - z;
-      return { x: isoX + 100, y: isoY + 40 };
-    };
+    const drawSun = (cx: number, cy: number) => {
+      starPulse += 0.03;
+      const glow = Math.sin(starPulse) * 4;
 
-    const drawBuilding = (b: Building, isHovered: boolean) => {
-      ctx.save();
+      // هاله انرژی کور
+      const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 55 + glow);
+      grad.addColorStop(0, "#FFFFFF");
+      grad.addColorStop(0.2, "#00B4D8");
+      grad.addColorStop(0.6, "rgba(255, 159, 252, 0.4)");
+      grad.addColorStop(1, "rgba(3, 7, 18, 0)");
 
-      // مختصات رندرینگ پایه‌ای ساختمان
-      const p1 = toIso(b.x - b.width / 2, b.y - b.depth / 2, 0);
-      const p2 = toIso(b.x + b.width / 2, b.y - b.depth / 2, 0);
-      const p3 = toIso(b.x + b.width / 2, b.y + b.depth / 2, 0);
-      const p4 = toIso(b.x - b.width / 2, b.y + b.depth / 2, 0);
-
-      const top1 = toIso(b.x - b.width / 2, b.y - b.depth / 2, b.height);
-      const top2 = toIso(b.x + b.width / 2, b.y - b.depth / 2, b.height);
-      const top3 = toIso(b.x + b.width / 2, b.y + b.depth / 2, b.height);
-      const top4 = toIso(b.x - b.width / 2, b.y + b.depth / 2, b.height);
-
-      // رسم سایه پایه
-      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+      ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.lineTo(p3.x, p3.y);
-      ctx.lineTo(p4.x, p4.y);
-      ctx.closePath();
+      ctx.arc(cx, cy, 55 + glow, 0, Math.PI * 2);
       ctx.fill();
 
-      // دیواره چپ
-      ctx.fillStyle = isHovered ? "rgba(0, 180, 216, 0.45)" : "#070D1C";
-      ctx.strokeStyle = isHovered ? b.color : "#1B273A";
-      ctx.lineWidth = isHovered ? 2 : 1;
+      // کره ستاره
       ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(top1.x, top1.y);
-      ctx.lineTo(top4.x, top4.y);
-      ctx.lineTo(p4.x, p4.y);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // دیواره راست
-      ctx.fillStyle = isHovered ? "rgba(255, 159, 252, 0.3)" : "#0C1428";
-      ctx.beginPath();
-      ctx.moveTo(p4.x, p4.y);
-      ctx.lineTo(top4.x, top4.y);
-      ctx.lineTo(top3.x, top3.y);
-      ctx.lineTo(p3.x, p3.y);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // سقف سایبری (Holo-Roof)
-      ctx.fillStyle = isHovered ? b.color : "#111B33";
-      ctx.beginPath();
-      ctx.moveTo(top1.x, top1.y);
-      ctx.lineTo(top2.x, top2.y);
-      ctx.lineTo(top3.x, top3.y);
-      ctx.lineTo(top4.x, top4.y);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // چراغ سقف و آنتن سیگنال
-      ctx.beginPath();
-      ctx.arc(top3.x - 15, top3.y - 10, isHovered ? 4 : 2, 0, Math.PI * 2);
-      ctx.fillStyle = isHovered ? "#FF9FFC" : b.color;
-      ctx.fill();
-
-      // هود و تگ نام بالای ساختمان هنگام هاور
-      if (isHovered) {
-        ctx.font = "bold 11px monospace";
-        ctx.fillStyle = b.color;
-        ctx.textAlign = "center";
-        ctx.fillText(`▲ ${b.name}`, top4.x + 20, top4.y - 14);
-
-        ctx.strokeStyle = b.color;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(top4.x + 20, top4.y - 10);
-        ctx.lineTo(top4.x + 20, top4.y - 2);
-        ctx.stroke();
-      }
-
-      ctx.restore();
-    };
-
-    const drawRobot = () => {
-      ctx.save();
-      const pos = toIso(robot.x, robot.y, 8);
-      robot.glowAngle += 0.05;
-
-      // هاله زیر ربات
-      ctx.beginPath();
-      ctx.ellipse(pos.x, pos.y + 12, 14, 6, 0, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(0, 180, 216, 0.3)";
-      ctx.fill();
-
-      // بدنه رباتیک اصلی (تخم‌مرغی سایبرنتیک)
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 20, 0, Math.PI * 2);
       ctx.fillStyle = "#FFFFFF";
       ctx.shadowColor = "#00B4D8";
-      ctx.shadowBlur = 15;
+      ctx.shadowBlur = 25;
       ctx.fill();
+      ctx.shadowBlur = 0;
 
-      // چشم/سنسور مرکزی ایجنت (نارنجی درخشان اختصاصی شما)
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y - 1, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = "#FF8800";
-      ctx.shadowColor = "#FF8800";
-      ctx.shadowBlur = 10;
-      ctx.fill();
-
-      // تگ HOST AGENT بالای سر ربات
-      ctx.font = "9px monospace";
-      ctx.fillStyle = "#00B4D8";
+      ctx.font = "bold 9px monospace";
+      ctx.fillStyle = "#90E0EF";
       ctx.textAlign = "center";
-      ctx.fillText("YOU (HOST AGENT)", pos.x, pos.y - 14);
+      ctx.fillText("FLOP CORE", cx, cy + 32);
+    };
+
+    const drawShip = (s: { x: number; y: number; angle: number; color: string; isHost?: boolean }) => {
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.angle);
+
+      // رسم بدنه سفینه سای‌فای به شکل دارت / جنگنده
+      ctx.beginPath();
+      ctx.moveTo(10, 0);
+      ctx.lineTo(-7, -6);
+      ctx.lineTo(-4, 0);
+      ctx.lineTo(-7, 6);
+      ctx.closePath();
+
+      ctx.fillStyle = s.isHost ? "#FF8800" : s.color;
+      ctx.shadowColor = s.isHost ? "#FF8800" : s.color;
+      ctx.shadowBlur = s.isHost ? 15 : 8;
+      ctx.fill();
+
+      // موتور رانش پلاسمایی
+      ctx.beginPath();
+      ctx.moveTo(-4, 0);
+      ctx.lineTo(-11, 0);
+      ctx.strokeStyle = s.isHost ? "#FFFFFF" : "#FF9FFC";
+      ctx.lineWidth = 2;
+      ctx.stroke();
 
       ctx.restore();
     };
 
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
 
-      // رسم خطوط کف شهر (Holo-Grid)
-      ctx.strokeStyle = "rgba(47, 41, 58, 0.4)";
-      ctx.lineWidth = 1;
-      for (let i = 100; i <= 700; i += 60) {
-        const start = toIso(i, 80, 0);
-        const end = toIso(i, 460, 0);
+      // ۱. رسم استارهای پس‌زمینه
+      stars.forEach((st) => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${st.alpha})`;
         ctx.beginPath();
-        ctx.moveTo(start.x, start.y);
-        ctx.lineTo(end.x, end.y);
-        ctx.stroke();
-      }
-      for (let j = 80; j <= 460; j += 60) {
-        const start = toIso(100, j, 0);
-        const end = toIso(700, j, 0);
-        ctx.beginPath();
-        ctx.moveTo(start.x, start.y);
-        ctx.lineTo(end.x, end.y);
-        ctx.stroke();
-      }
+        ctx.arc(st.x, st.y, st.radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
 
-      // حرکت گام‌به‌گام ربات به سوی ساختمان انتخابی
-      if (robot.isMoving) {
-        const dx = robot.targetX - robot.x;
-        const dy = robot.targetY - robot.y;
+      // ۲. رسم مدارهای چرخش بیضوی
+      planetsRef.current.forEach((p) => {
+        ctx.strokeStyle = "rgba(47, 41, 58, 0.6)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, p.orbitRadiusX, p.orbitRadiusY, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      });
+
+      // ۳. رسم ستاره مرکزی
+      drawSun(cx, cy);
+
+      // ۴. آپدیت و رسم سیارات
+      planetsRef.current.forEach((p) => {
+        p.angle += p.speed;
+        const px = cx + Math.cos(p.angle) * p.orbitRadiusX;
+        const py = cy + Math.sin(p.angle) * p.orbitRadiusY;
+
+        const isHovered = hoveredPlanet?.id === p.id;
+
+        // حلقه سیاره (Rings)
+        if (p.ring) {
+          ctx.strokeStyle = p.glowColor;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.ellipse(px, py, p.size * 1.8, p.size * 0.6, 0.4, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // اتمسفر و درخشش سیاره
+        ctx.beginPath();
+        ctx.arc(px, py, p.size + (isHovered ? 5 : 2), 0, Math.PI * 2);
+        ctx.fillStyle = p.glowColor;
+        ctx.fill();
+
+        // بدنه اصلی سیاره
+        ctx.beginPath();
+        ctx.arc(px, py, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = isHovered ? 20 : 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // هود و اطلاعات سیاره هنگام هاور
+        if (isHovered) {
+          ctx.font = "bold 11px monospace";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.textAlign = "center";
+          ctx.fillText(`⯈ ${p.name}`, px, py - p.size - 12);
+
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(px, py - p.size - 8);
+          ctx.lineTo(px, py - p.size - 2);
+          ctx.stroke();
+        }
+      });
+
+      // ۵. حرکت و چرخش سفینه‌های ایجنت در کهکشان
+      ships.forEach((s) => {
+        s.x += s.vx;
+        s.y += s.vy;
+        s.angle = Math.atan2(s.vy, s.vx);
+
+        if (s.x < 20 || s.x > canvas.width - 20) s.vx *= -1;
+        if (s.y < 20 || s.y > canvas.height - 20) s.vy *= -1;
+
+        drawShip(s);
+      });
+
+      // ۶. حرکت سفینه پرچمدار شما (Host Flagship)
+      if (hostShip.isWarping) {
+        const dx = hostShip.targetX - hostShip.x;
+        const dy = hostShip.targetY - hostShip.y;
         const dist = Math.hypot(dx, dy);
+        hostShip.angle = Math.atan2(dy, dx);
 
-        if (dist > robot.speed) {
-          robot.x += (dx / dist) * robot.speed;
-          robot.y += (dy / dist) * robot.speed;
+        if (dist > hostShip.speed) {
+          hostShip.x += (dx / dist) * hostShip.speed;
+          hostShip.y += (dy / dist) * hostShip.speed;
+
+          // خط شتاب هایپردرایو
+          ctx.strokeStyle = "rgba(255, 136, 0, 0.4)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(hostShip.x, hostShip.y);
+          ctx.lineTo(hostShip.x - Math.cos(hostShip.angle) * 25, hostShip.y - Math.sin(hostShip.angle) * 25);
+          ctx.stroke();
         } else {
-          robot.x = robot.targetX;
-          robot.y = robot.targetY;
-          robot.isMoving = false;
-
-          // ورود به ساختمان و تغییر صفحه
-          if (robot.targetRoute) {
-            router.push(robot.targetRoute);
+          hostShip.isWarping = false;
+          if (hostShip.targetRoute) {
+            router.push(hostShip.targetRoute);
           }
         }
       }
 
-      // ترتیب رندر بر اساس Y برای عمق سه‌بعدی
-      const sorted = [...buildings].sort((a, b) => a.y - b.y);
-      sorted.forEach((b) => {
-        const isHovered = hoveredBuilding?.id === b.id;
-        drawBuilding(b, isHovered);
-      });
+      drawShip({ ...hostShip, color: "#FF8800", isHost: true });
 
-      drawRobot();
       animId = requestAnimationFrame(render);
     };
 
     render();
 
-    return () => {
-      cancelAnimationFrame(animId);
-    };
-  }, [hoveredBuilding, router]);
+    return () => cancelAnimationFrame(animId);
+  }, [hoveredPlanet, router]);
 
-  // کنترل تعامل ماوس و تشخیص هاور / کلیک روی ساختمان‌ها
-  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // رهگیری هاور روی سیارات
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    // تبدیل برعکس تقریبی برای تشخیص ساختمان
-    let matched: Building | null = null;
-    for (const b of buildings) {
-      const iso = {
-        x: (b.x - b.y * 0.4) + 100,
-        y: ((b.x * 0.25 + b.y * 0.5) - b.height * 0.5) + 40
-      };
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
 
-      const dist = Math.hypot(mouseX - iso.x, mouseY - iso.y);
-      if (dist < 45) {
-        matched = b;
+    let match: Planet | null = null;
+    for (const p of planetsRef.current) {
+      const px = cx + Math.cos(p.angle) * p.orbitRadiusX;
+      const py = cy + Math.sin(p.angle) * p.orbitRadiusY;
+
+      const dist = Math.hypot(mouseX - px, mouseY - py);
+      if (dist < p.size + 8) {
+        match = p;
         break;
       }
     }
 
-    setHoveredBuilding(matched);
+    setHoveredPlanet(match);
   };
 
-  const handleCanvasClick = () => {
-    if (!hoveredBuilding) return;
-    setNavigatingTo(hoveredBuilding.name);
-
-    // ربات شروع به حرکت به سمت درب ساختمان می‌کند
+  // کلیک روی سیاره و اعزام هایپردرایو سفینه
+  const handleClick = () => {
+    if (!hoveredPlanet) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // ارسال رویداد حرکت به انیمیشن
-    const b = hoveredBuilding;
-    const targetX = b.x;
-    const targetY = b.y + b.depth / 2 + 10;
+    setWarpingTarget(hoveredPlanet.name);
 
-    // از طریق یک کاستوم ایونت ساده به لوپ هدایت می‌شود
-    const event = new CustomEvent("move-robot", { detail: { targetX, targetY, route: b.route } });
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const targetX = cx + Math.cos(hoveredPlanet.angle) * hoveredPlanet.orbitRadiusX;
+    const targetY = cy + Math.sin(hoveredPlanet.angle) * hoveredPlanet.orbitRadiusY;
+
+    // ارسال فرمان پرواز به سمت سیاره
+    const event = new CustomEvent("fly-to-planet", {
+      detail: { targetX, targetY, route: hoveredPlanet.route },
+    });
     window.dispatchEvent(event);
   };
 
   useEffect(() => {
-    const handleMove = (e: Event) => {
-      const { targetX, targetY, route } = (e as CustomEvent).detail;
-      // اجرای حرکت به سمت ساختمان
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      router.push(route);
+    const handleFly = (e: Event) => {
+      const { route } = (e as CustomEvent).detail;
+      setTimeout(() => {
+        router.push(route);
+      }, 700);
     };
-    window.addEventListener("move-robot", handleMove);
-    return () => window.removeEventListener("move-robot", handleMove);
+    window.addEventListener("fly-to-planet", handleFly);
+    return () => window.removeEventListener("fly-to-planet", handleFly);
   }, [router]);
 
   return (
-    <div className="my-8 rounded-2xl bg-[#070B14] border border-[#2F293A] p-6 font-mono relative overflow-hidden shadow-[0_0_30px_rgba(0,180,216,0.15)]">
-      {/* هدر بخش FLOP-UNIVERSE */}
+    <div className="my-8 rounded-2xl bg-[#030611] border border-[#2F293A] p-6 font-mono relative overflow-hidden shadow-[0_0_35px_rgba(0,180,216,0.15)]">
+      {/* هدر بخش FLOP SOLAR SYSTEM */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-[#1E293B] pb-4 mb-4 gap-2">
         <div className="flex items-center gap-2">
-          <Compass className="w-5 h-5 text-[#00B4D8] animate-spin-slow" />
+          <Globe2 className="w-5 h-5 text-[#00B4D8] animate-spin-slow" />
           <h2 className="text-sm font-extrabold tracking-wider text-white">
-            FLOP-UNIVERSE <span className="text-[#00B4D8]">· 3D NEURAL METROPOLIS</span>
+            FLOP-UNIVERSE <span className="text-[#00B4D8]">· 3D SOLAR SYSTEM</span>
           </h2>
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-slate-400">
-          <span className="flex items-center gap-1 text-[#00B4D8]">
-            <Eye className="w-3.5 h-3.5" /> Hover & click any sector to enter
+        <div className="flex items-center gap-4 text-[11px] text-slate-400">
+          <span className="flex items-center gap-1.5 text-[#FF8800]">
+            <Rocket className="w-3.5 h-3.5" /> Orange Vessel: Your Host Agent
           </span>
-          {navigatingTo && (
-            <span className="text-[#FF9FFC] font-bold animate-pulse">
-              [AGENT ENTERING {navigatingTo}...]
+          {warpingTarget && (
+            <span className="text-[#FF9FFC] font-bold animate-pulse flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5" /> [HYPERDRIVE WARPING TO {warpingTarget}...]
             </span>
           )}
         </div>
       </div>
 
-      {/* کنواس سه‌بعدی ایزومتریک */}
-      <div className="relative w-full h-[460px] flex justify-center items-center bg-gradient-to-b from-[#04060C] to-[#080E1D] rounded-xl border border-[#162032] cursor-pointer">
+      {/* کنواس سه‌بعدی منظومه خورشیدی */}
+      <div className="relative w-full h-[480px] flex justify-center items-center bg-gradient-to-b from-[#020409] via-[#040817] to-[#02050E] rounded-xl border border-[#162032] cursor-pointer overflow-hidden">
         <canvas
           ref={canvasRef}
-          width={800}
-          height={460}
-          onMouseMove={handleCanvasMouseMove}
-          onClick={handleCanvasClick}
+          width={840}
+          height={480}
+          onMouseMove={handleMouseMove}
+          onClick={handleClick}
           className="max-w-full h-auto block"
         />
 
-        {/* تولتیپ شناور برای نمایش جزئیات بخش هاور شده */}
-        {hoveredBuilding && (
-          <div className="absolute top-4 left-4 p-3 rounded-lg bg-[#0B0F19]/90 border border-[#00B4D8] text-left pointer-events-none backdrop-blur-md shadow-[0_0_20px_rgba(0,180,216,0.3)]">
+        {/* تولتیپ هدایت سیگنالی */}
+        {hoveredPlanet && (
+          <div className="absolute top-4 left-4 p-3.5 rounded-xl bg-[#0B0F19]/90 border border-[#00B4D8] text-left pointer-events-none backdrop-blur-md shadow-[0_0_20px_rgba(0,180,216,0.35)]">
             <div className="text-xs font-bold text-white flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: hoveredBuilding.color }} />
-              {hoveredBuilding.name}
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: hoveredPlanet.color }} />
+              {hoveredPlanet.name}
             </div>
-            <div className="text-[10px] text-slate-400 mt-1">{hoveredBuilding.desc}</div>
+            <div className="text-[11px] text-slate-400 mt-1">{hoveredPlanet.desc}</div>
             <div className="text-[10px] text-[#00B4D8] mt-2 font-bold flex items-center gap-1">
-              CLICK TO WALK AGENT INSIDE →
+              CLICK TO INITIATE HYPERDRIVE FLIGHT 🚀
             </div>
           </div>
         )}
