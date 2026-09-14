@@ -1,0 +1,214 @@
+.container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto 60px auto;
+  font-family: var(--font-mono, monospace);
+}
+
+.introBanner {
+  background: rgba(11, 15, 25, 0.95);
+  border: 1px solid #2f293a;
+  border-left: 4px solid #00b4d8;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 0 30px rgba(0, 180, 216, 0.1);
+}
+
+.bannerTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bannerBadge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 180, 216, 0.15);
+  color: #00b4d8;
+  border: 1px solid rgba(0, 180, 216, 0.3);
+  text-transform: uppercase;
+}
+
+.bannerDesc {
+  color: #94a3b8;
+  font-size: 12px;
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+.actionPanel {
+  background: #070b14;
+  border: 1px solid #2f293a;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+  margin-bottom: 28px;
+}
+
+.generateBtn {
+  background: #00b4d8;
+  color: #020612;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 28px;
+  font-size: 13px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.3);
+}
+
+.generateBtn:hover {
+  background: #90e0ef;
+  box-shadow: 0 0 30px rgba(0, 180, 216, 0.5);
+  transform: translateY(-1px);
+}
+
+.generateBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.resultsCard {
+  background: #090e1d;
+  border: 1px solid rgba(0, 180, 216, 0.4);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 0 35px rgba(0, 180, 216, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.outputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.outputLabel {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.outputBox {
+  background: #020409;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #00b4d8;
+  font-size: 12px;
+  word-break: break-all;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.copyBtn {
+  background: rgba(0, 180, 216, 0.15);
+  border: 1px solid rgba(0, 180, 216, 0.4);
+  color: #00b4d8;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 10px;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.copyBtn:hover {
+  background: #00b4d8;
+  color: #020612;
+}
+
+.privateNotice {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 11px;
+  color: #fca5a5;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.revealToggle {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.revealToggle:hover {
+  color: #ffffff;
+  border-color: #00b4d8;
+}
+
+.secretBox {
+  background: #020409;
+  border: 1px solid #2f293a;
+  border-radius: 8px;
+  padding: 12px;
+  color: #f43f5e;
+  font-size: 11px;
+  word-break: break-all;
+  white-space: pre-wrap;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.secretBlurred {
+  filter: blur(6px);
+  user-select: none;
+}
+
+.actionRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btnDownload {
+  background: #ff9ffc;
+  color: #020612;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btnDownload:hover {
+  background: #fbcfe8;
+  box-shadow: 0 0 20px rgba(255, 159, 252, 0.4);
+}

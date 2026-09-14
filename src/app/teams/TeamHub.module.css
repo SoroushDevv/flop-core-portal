@@ -1,0 +1,309 @@
+.container {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto 60px auto;
+  font-family: var(--font-mono, monospace);
+}
+
+.headerBanner {
+  background: rgba(11, 15, 25, 0.95);
+  border: 1px solid #2f293a;
+  border-left: 4px solid #00b4d8;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 0 30px rgba(0, 180, 216, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.headerTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 180, 216, 0.15);
+  color: #00b4d8;
+  border: 1px solid rgba(0, 180, 216, 0.3);
+}
+
+.headerDesc {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+/* Host Official Team Card */
+.featuredTeamCard {
+  background: linear-gradient(135deg, rgba(0, 180, 216, 0.1) 0%, rgba(6, 13, 27, 0.95) 100%);
+  border: 2px solid #00b4d8;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 36px;
+  box-shadow: 0 0 35px rgba(0, 180, 216, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.featuredGlow {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 120px;
+  height: 120px;
+  background: #00b4d8;
+  opacity: 0.15;
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.featuredTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.featuredHostBadge {
+  background: #00b4d8;
+  color: #020612;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.teamTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-top: 4px;
+}
+
+.teamDesc {
+  font-size: 12px;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.rosterSlots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.memberSlot {
+  background: #040814;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.memberSlotFilled {
+  border-color: rgba(0, 180, 216, 0.4);
+  color: #00b4d8;
+}
+
+.memberSlotEmpty {
+  border-style: dashed;
+  border-color: #334155;
+  color: #64748b;
+  text-align: center;
+  justify-content: center;
+}
+
+.slotLabel {
+  color: #64748b;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.slotDid {
+  color: #f1f5f9;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Action Controls & Forms */
+.actionRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.joinInput {
+  flex: 1;
+  min-width: 260px;
+  background: #03060f;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+.joinInput:focus {
+  border-color: #00b4d8;
+}
+
+.btnCyan {
+  background: #00b4d8;
+  color: #020612;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btnCyan:hover {
+  background: #90e0ef;
+  box-shadow: 0 0 16px rgba(0, 180, 216, 0.4);
+}
+
+.btnPink {
+  background: #ff9ffc;
+  color: #020612;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btnPink:hover {
+  background: #fbcfe8;
+  box-shadow: 0 0 16px rgba(255, 159, 252, 0.4);
+}
+
+/* Community Teams Grid */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.teamsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.teamCard {
+  background: #070b14;
+  border: 1px solid #2f293a;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.25s ease;
+}
+
+.teamCard:hover {
+  border-color: rgba(0, 180, 216, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.teamMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.teamLeader {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.slotProgress {
+  font-size: 11px;
+  font-weight: bold;
+  color: #00b4d8;
+}
+
+.createTeamBox {
+  background: #070b14;
+  border: 1px solid #2f293a;
+  border-radius: 14px;
+  padding: 22px;
+  margin-top: 24px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputLabel {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.inputField {
+  background: #03060f;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 9px 12px;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+.inputField:focus {
+  border-color: #00b4d8;
+}

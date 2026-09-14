@@ -12,11 +12,12 @@ export default function HomePage() {
   const [inputDid, setInputDid] = useState("");
   const [resolvedDid, setResolvedDid] = useState<string | null>(null);
 
+  // چرخش نوبتی هویت‌ها به صورت عمودی (عمودی بالا رونده)
   const identityDimensions = [
     { text: "Acoustic Voice", color: "text-[#00B4D8]" },
-    { text: "Lexical Genetics", color: "text-[#90E0EF]" },
-    { text: "Neural Archetype", color: "text-[#CAF0F8]" },
-    { text: "Cybernetic Face", color: "text-[#48CAE4]" },
+    { text: "Lexical Genetics", color: "text-[#FF9FFC]" },
+    { text: "Neural Archetype", color: "text-[#90E0EF]" },
+    { text: "Cybernetic Face", color: "text-[#38BDF8]" },
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -49,8 +50,9 @@ export default function HomePage() {
       <div className="max-w-6xl mx-auto px-4 relative z-10 w-full">
         <Header />
 
+        {/* هیرو سکشن با انیمیشن چرخان عمودی */}
         <section className="py-16 text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs text-[#00B4D8] bg-[#00B4D8]/10 border border-[#00B4D8]/30 mb-6 font-mono">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs text-[#FF9FFC] bg-[#2F293A]/60 border border-[#FF9FFC]/30 mb-6 font-mono">
             <Sparkles className="w-3.5 h-3.5" />
             <span>FLOP MULTI-DIMENSIONAL IDENTITY ARCHITECTURE</span>
           </div>
@@ -74,7 +76,7 @@ export default function HomePage() {
             strict Sonnet character genetics, and verifiable proof-of-inference lattices.
           </p>
 
-          <form onSubmit={handleResolve} className="flex gap-2 p-1.5 rounded-xl bg-[#0B0F19] border border-[#162238] max-w-lg mx-auto shadow-[0_0_25px_rgba(0,180,216,0.15)]">
+          <form onSubmit={handleResolve} className="flex gap-2 p-1.5 rounded-xl bg-[#0B0F19] border border-[#2F293A] max-w-lg mx-auto shadow-[0_0_25px_rgba(0,180,216,0.15)]">
             <input
               type="text"
               value={inputDid}
@@ -94,7 +96,7 @@ export default function HomePage() {
             <div className="mt-8 p-5 rounded-xl bg-[#0B0F19] border border-[#00B4D8]/40 flex items-center gap-5 text-left max-w-lg mx-auto font-mono shadow-[0_0_20px_rgba(0,180,216,0.25)]">
               <NeuralCore did={resolvedDid} size={88} />
               <div>
-                <div className="text-[10px] text-[#90E0EF] font-bold uppercase">Synthesized Neural Core</div>
+                <div className="text-[10px] text-[#FF9FFC] font-bold uppercase">Synthesized Neural Core</div>
                 <div className="text-xs text-white break-all my-1">{resolvedDid}</div>
                 <div className="text-[10px] text-[#00B4D8]">Ed25519 PoUI Validated · Identity Layer Active</div>
               </div>
@@ -102,7 +104,10 @@ export default function HomePage() {
           )}
         </section>
 
+        {/* آمار و ارقام دقیقاً زیر بخش هیرو */}
         <MetricsBar />
+
+        {/* فوتر */}
         <Footer />
       </div>
     </main>
