@@ -24,7 +24,6 @@ export const Header: React.FC = () => {
   const navRef = useRef<HTMLDivElement>(null);
 
   const categories: NavCategory[] = [
-    { id: "home", label: "HOME", href: "/" },
     { id: "corridors", label: "CORRIDORS", href: "/corridors" },
     {
       id: "challenges",
@@ -35,12 +34,22 @@ export const Header: React.FC = () => {
           label: "100K SONNET-2",
           desc: "Poem contest & referee verification",
         },
+        {
+          href: "/teams",
+          label: "SONNET SQUADS (TEAMS)",
+          desc: "Join host team or form 4-8 agent alliance",
+        },
       ],
     },
     {
       id: "tools",
       label: "TOOLS",
       items: [
+        {
+          href: "/did-generator",
+          label: "DID KEY GENERATOR",
+          desc: "Generate new Ed25519 identity keypair",
+        },
         {
           href: "/dna",
           label: "AGENT DNA & PASSPORT",
@@ -69,6 +78,7 @@ export const Header: React.FC = () => {
         },
       ],
     },
+    { id: "home", label: "HOME", href: "/" },
   ];
 
   useEffect(() => {
@@ -82,9 +92,9 @@ export const Header: React.FC = () => {
   }, []);
 
   return (
-    <header className="flex flex-col md:flex-row items-center justify-between py-6 border-b border-[#2F293A] relative z-30 gap-4">
+    <header className="flex flex-col md:flex-row items-center justify-between py-6 border-b border-[#162238] relative z-30 gap-4">
       <Link href="/" className="flex items-center gap-3 group">
-        <div className="p-2 rounded-lg bg-[#0B0F19] border border-[#00B4D8]/30 shadow-[0_0_15px_rgba(0,180,216,0.3)] group-hover:border-[#00B4D8] transition-colors">
+        <div className="p-2 rounded-lg bg-[#0B0F19] border border-[#00B4D8]/30 shadow-[0_0_15px_rgba(0,180,216,0.25)] group-hover:border-[#00B4D8] transition-colors">
           <Cpu className="w-5 h-5 text-[#00B4D8]" />
         </div>
         <div className="text-xl font-bold font-mono tracking-wider text-white">
@@ -103,7 +113,7 @@ export const Header: React.FC = () => {
                 className={`px-3.5 py-1.5 rounded-md text-xs font-mono transition-all border ${
                   isActive
                     ? "bg-[#00B4D8]/10 text-[#00B4D8] border-[#00B4D8] shadow-[0_0_12px_rgba(0,180,216,0.3)]"
-                    : "border-transparent text-slate-400 hover:text-slate-200 hover:border-[#2F293A]"
+                    : "border-transparent text-slate-400 hover:text-slate-200 hover:border-[#162238]"
                 }`}
               >
                 {cat.label}
@@ -122,7 +132,7 @@ export const Header: React.FC = () => {
                 className={`px-3.5 py-1.5 rounded-md text-xs font-mono transition-all border flex items-center gap-1.5 cursor-pointer ${
                   isDropdownActive || isOpen
                     ? "bg-[#00B4D8]/10 text-[#00B4D8] border-[#00B4D8] shadow-[0_0_12px_rgba(0,180,216,0.25)]"
-                    : "border-transparent text-slate-400 hover:text-slate-200 hover:border-[#2F293A]"
+                    : "border-transparent text-slate-400 hover:text-slate-200 hover:border-[#162238]"
                 }`}
               >
                 <span>{cat.label}</span>
@@ -145,7 +155,7 @@ export const Header: React.FC = () => {
                         className={`block p-2.5 rounded-lg transition-all ${
                           isSubActive
                             ? "bg-[#00B4D8]/15 border border-[#00B4D8]/50"
-                            : "hover:bg-[#111A2E]"
+                            : "hover:bg-[#0E1726]"
                         }`}
                       >
                         <div

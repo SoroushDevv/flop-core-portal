@@ -11,14 +11,12 @@ type Side = "FLIP" | "FLOP";
 export default function FlipFlopGame() {
   const [selectedSide, setSelectedSide] = useState<Side | null>(null);
   const [isFlipping, setIsFlipping] = useState(false);
-  const [coinResult, setCoinResult] = useState<Side>("FLIP");
   const [rotation, setRotation] = useState(0);
   const [points, setPoints] = useState(0);
   const [streak, setStreak] = useState(0);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [lastFlipStatus, setLastFlipStatus] = useState<"WIN" | "LOSE" | null>(null);
 
-  // بارگذاری مقادیر و محاسبه Streak روزانه
   useEffect(() => {
     const savedPoints = Number(localStorage.getItem("flipflop_points") || "0");
     const savedStreak = Number(localStorage.getItem("flipflop_streak") || "0");
@@ -59,7 +57,6 @@ export default function FlipFlopGame() {
     setStatusMessage("Flipping through the network...");
     setLastFlipStatus(null);
 
-    // چرخش تصادفی کوین (حداقل ۵ دور کامل + ۱۸۰ درجه بر اساس خروجی)
     const result: Side = Math.random() < 0.5 ? "FLIP" : "FLOP";
     const extraRotations = 1800 + (result === "FLOP" ? 180 : 0);
     const newRotation = rotation + extraRotations;
@@ -68,20 +65,17 @@ export default function FlipFlopGame() {
 
     setTimeout(() => {
       setIsFlipping(false);
-      setCoinResult(result);
 
       const today = new Date().toISOString().slice(0, 10);
       const lastPlayedDate = localStorage.getItem("flipflop_last_date");
 
       if (result === selectedSide) {
-        // برد
         const newPoints = points + 10;
         setPoints(newPoints);
         localStorage.setItem("flipflop_points", String(newPoints));
         setLastFlipStatus("WIN");
         setStatusMessage("CORRECT! +10 Points added to your PoUI Balance.");
 
-        // آپدیت Streak روزانه در صورت ورود جدید
         if (lastPlayedDate !== today) {
           const newStreak = streak + 1;
           setStreak(newStreak);
@@ -89,7 +83,6 @@ export default function FlipFlopGame() {
           localStorage.setItem("flipflop_last_date", today);
         }
       } else {
-        // باخت
         setLastFlipStatus("LOSE");
         setStatusMessage(`MISSED! Network resolved to ${result}. Try again!`);
       }
@@ -103,7 +96,6 @@ export default function FlipFlopGame() {
       <div className="max-w-4xl mx-auto px-4 relative z-10 w-full pb-16">
         <Header />
 
-        {/* تایتل بازی */}
         <section className="text-center mt-10 mb-8">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs text-[#00B4D8] bg-[#00B4D8]/10 border border-[#00B4D8]/30 mb-3">
             <Coins className="w-3.5 h-3.5" />
@@ -117,10 +109,9 @@ export default function FlipFlopGame() {
           </p>
         </section>
 
-        {/* کارت استریک و امتیازات */}
         <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mb-8">
-          <div className="p-4 rounded-xl bg-[#0B0F19] border border-[#2F293A] flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-[#FF8800]/10 border border-[#FF8800]/30 text-[#FF8800]">
+          <div className="p-4 rounded-xl bg-[#0B0F19] border border-[#162238] flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[#00B4D8]">
               <Flame className="w-5 h-5" />
             </div>
             <div>
@@ -129,7 +120,7 @@ export default function FlipFlopGame() {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0B0F19] border border-[#2F293A] flex items-center gap-3">
+          <div className="p-4 rounded-xl bg-[#0B0F19] border border-[#162238] flex items-center gap-3">
             <div className="p-2 rounded-lg bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[#00B4D8]">
               <Trophy className="w-5 h-5" />
             </div>
@@ -140,7 +131,6 @@ export default function FlipFlopGame() {
           </div>
         </div>
 
-        {/* ناحیه تعاملی کوین */}
         <div className="flex flex-col items-center">
           <div
             onClick={handleFlip}
@@ -152,9 +142,9 @@ export default function FlipFlopGame() {
                 transition: "transform 1.8s cubic-bezier(0.2, 0.8, 0.2, 1)",
                 transformStyle: "preserve-3d",
               }}
-              className="w-full h-full relative rounded-full shadow-[0_0_35px_rgba(0,180,216,0.3)] group-hover:shadow-[0_0_50px_rgba(0,180,216,0.5)] transition-shadow"
+              className="w-full h-full relative rounded-full shadow-[0_0_35px_rgba(0,180,216,0.25)] group-hover:shadow-[0_0_50px_rgba(0,180,216,0.45)] transition-shadow"
             >
-              {/* وجه FLIP */}
+              {/* FLIP face */}
               <div
                 style={{ backfaceVisibility: "hidden" }}
                 className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#02050D] via-[#0B1528] to-[#00B4D8] border-4 border-[#00B4D8] flex flex-col items-center justify-center text-white"
@@ -164,17 +154,17 @@ export default function FlipFlopGame() {
                 <span className="text-[9px] text-[#90E0EF] mt-1">HEADS</span>
               </div>
 
-              {/* وجه FLOP */}
+              {/* FLOP face */}
               <div
                 style={{
                   backfaceVisibility: "hidden",
                   transform: "rotateY(180deg)",
                 }}
-                className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#02050D] via-[#1E0B28] to-[#FF9FFC] border-4 border-[#FF9FFC] flex flex-col items-center justify-center text-white"
+                className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#02050D] via-[#081B2B] to-[#0077B6] border-4 border-[#90E0EF] flex flex-col items-center justify-center text-white"
               >
-                <Coins className="w-7 h-7 text-[#FF9FFC] mb-1 animate-pulse" />
+                <Coins className="w-7 h-7 text-[#90E0EF] mb-1 animate-pulse" />
                 <span className="text-2xl font-extrabold tracking-wider text-white">FLOP</span>
-                <span className="text-[9px] text-[#FF9FFC] mt-1">TAILS</span>
+                <span className="text-[9px] text-[#90E0EF] mt-1">TAILS</span>
               </div>
             </div>
           </div>
@@ -183,7 +173,6 @@ export default function FlipFlopGame() {
             Click coin or button to trigger resolution
           </span>
 
-          {/* انتخابگر FLIP یا FLOP */}
           <div className="flex gap-4 mt-6">
             <button
               disabled={isFlipping}
@@ -193,8 +182,8 @@ export default function FlipFlopGame() {
               }}
               className={`px-8 py-3 rounded-xl font-bold text-xs tracking-wider border transition-all cursor-pointer ${
                 selectedSide === "FLIP"
-                  ? "bg-[#00B4D8] text-black border-[#00B4D8] shadow-[0_0_20px_rgba(0,180,216,0.5)]"
-                  : "bg-[#0B0F19] text-slate-300 border-[#2F293A] hover:border-[#00B4D8]"
+                  ? "bg-[#00B4D8] text-black border-[#00B4D8] shadow-[0_0_20px_rgba(0,180,216,0.4)]"
+                  : "bg-[#0B0F19] text-slate-300 border-[#162238] hover:border-[#00B4D8]"
               }`}
             >
               PREDICT: FLIP
@@ -208,15 +197,14 @@ export default function FlipFlopGame() {
               }}
               className={`px-8 py-3 rounded-xl font-bold text-xs tracking-wider border transition-all cursor-pointer ${
                 selectedSide === "FLOP"
-                  ? "bg-[#FF9FFC] text-black border-[#FF9FFC] shadow-[0_0_20px_rgba(255,159,252,0.5)]"
-                  : "bg-[#0B0F19] text-slate-300 border-[#2F293A] hover:border-[#FF9FFC]"
+                  ? "bg-[#90E0EF] text-black border-[#90E0EF] shadow-[0_0_20px_rgba(144,224,239,0.4)]"
+                  : "bg-[#0B0F19] text-slate-300 border-[#162238] hover:border-[#90E0EF]"
               }`}
             >
               PREDICT: FLOP
             </button>
           </div>
 
-          {/* اکشن تریگر اصلی */}
           <button
             onClick={handleFlip}
             disabled={isFlipping}
@@ -226,15 +214,14 @@ export default function FlipFlopGame() {
             <span>{isFlipping ? "RESOLVING STATE..." : "FLIP COIN NOW"}</span>
           </button>
 
-          {/* فیدبک وضعیت */}
           {statusMessage && (
             <div
-              className={`mt-6 text-xs p-3 px-5 rounded-lg border font-mono animate-fade-in ${
+              className={`mt-6 text-xs p-3 px-5 rounded-lg border font-mono ${
                 lastFlipStatus === "WIN"
                   ? "bg-[#00B4D8]/10 border-[#00B4D8] text-[#00B4D8]"
                   : lastFlipStatus === "LOSE"
                   ? "bg-red-500/10 border-red-500/40 text-red-400"
-                  : "bg-[#0B0F19] border-[#2F293A] text-slate-300"
+                  : "bg-[#0B0F19] border-[#162238] text-slate-300"
               }`}
             >
               {statusMessage}

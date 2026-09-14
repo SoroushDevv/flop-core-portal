@@ -28,7 +28,7 @@ export default function HomePage() {
       setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % identityDimensions.length);
         setIsFlipping(false);
-      }, 400);
+      }, 350);
     }, 2800);
     return () => clearInterval(interval);
   }, [identityDimensions.length]);
@@ -49,49 +49,53 @@ export default function HomePage() {
       <div className="max-w-6xl mx-auto px-4 relative z-10 w-full">
         <Header />
 
-        <section className="py-16 text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs text-[#00B4D8] bg-[#00B4D8]/10 border border-[#00B4D8]/30 mb-6 font-mono">
-            <Sparkles className="w-3.5 h-3.5" />
+        <section className="py-16 text-center max-w-4xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs text-[#00B4D8] bg-[#00B4D8]/10 border border-[#00B4D8]/30 mb-6">
+            <Sparkles className="w-3.5 h-3.5 text-[#00B4D8]" />
             <span>FLOP MULTI-DIMENSIONAL IDENTITY ARCHITECTURE</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-4 text-white">
-            Give your autonomous agent a deep
-            <span className="inline-block h-[1.3em] overflow-hidden align-bottom mx-2">
+          {/* Heading with space separation and nowrap container */}
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-normal mb-4 text-white flex flex-wrap items-center justify-center gap-x-2.5">
+            <span>Give your autonomous agent a deep</span>
+            <span className="inline-flex h-[1.3em] overflow-hidden items-center">
               <span
-                className={`inline-block transition-transform duration-400 ease-in-out ${
+                className={`inline-block whitespace-nowrap transition-transform duration-300 ease-in-out ${
                   isFlipping ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
                 } ${identityDimensions[currentIndex].color}`}
               >
                 {identityDimensions[currentIndex].text}
               </span>
             </span>
-            beyond a flat ID.
+            <span>beyond a flat ID.</span>
           </h1>
 
-          <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto mb-8 leading-relaxed font-mono">
+          <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto mb-8 leading-relaxed">
             More than just an image. We synthesize cryptographic sound frequencies,
             strict Sonnet character genetics, and verifiable proof-of-inference lattices.
           </p>
 
-          <form onSubmit={handleResolve} className="flex gap-2 p-1.5 rounded-xl bg-[#0B0F19] border border-[#162238] max-w-lg mx-auto shadow-[0_0_25px_rgba(0,180,216,0.15)]">
+          <form
+            onSubmit={handleResolve}
+            className="flex gap-2 p-1.5 rounded-xl bg-[#0B0F19] border border-[#162238] max-w-lg mx-auto shadow-[0_0_25px_rgba(0,180,216,0.15)]"
+          >
             <input
               type="text"
               value={inputDid}
               onChange={(e) => setInputDid(e.target.value)}
               placeholder="Paste did:key:z6Mk... to issue credentials"
-              className="flex-1 bg-transparent px-3 text-xs text-white outline-none font-mono"
+              className="flex-1 bg-transparent px-3 text-xs text-white outline-none"
             />
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-lg text-xs font-bold font-mono bg-[#00B4D8] text-black hover:bg-[#90E0EF] transition-all cursor-pointer shadow-[0_0_15px_rgba(0,180,216,0.3)]"
+              className="px-5 py-2.5 rounded-lg text-xs font-bold bg-[#00B4D8] text-black hover:bg-[#90E0EF] transition-all cursor-pointer shadow-[0_0_15px_rgba(0,180,216,0.3)]"
             >
               Synthesize
             </button>
           </form>
 
           {resolvedDid && (
-            <div className="mt-8 p-5 rounded-xl bg-[#0B0F19] border border-[#00B4D8]/40 flex items-center gap-5 text-left max-w-lg mx-auto font-mono shadow-[0_0_20px_rgba(0,180,216,0.25)]">
+            <div className="mt-8 p-5 rounded-xl bg-[#0B0F19] border border-[#00B4D8]/40 flex items-center gap-5 text-left max-w-lg mx-auto shadow-[0_0_20px_rgba(0,180,216,0.25)]">
               <NeuralCore did={resolvedDid} size={88} />
               <div>
                 <div className="text-[10px] text-[#90E0EF] font-bold uppercase">Synthesized Neural Core</div>

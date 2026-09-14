@@ -13,9 +13,7 @@ import {
   Download,
   ShieldCheck,
   Cpu,
-  Flame,
   Radio,
-  Share2,
 } from "lucide-react";
 
 export default function AgentDNAPage() {
@@ -26,7 +24,6 @@ export default function AgentDNAPage() {
   const cardRef = useRef<HTMLDivElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  // آنالیز اولیه دیفالت
   useEffect(() => {
     setDna(analyzeAgentDNA(inputDid));
   }, []);
@@ -40,7 +37,6 @@ export default function AgentDNAPage() {
     setDna(analyzeAgentDNA(inputDid.trim()));
   };
 
-  // افکت تیلت سه‌بعدی با ماوس روی پاسپورت
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
@@ -61,7 +57,6 @@ export default function AgentDNAPage() {
     });
   };
 
-  // سنتز صدای سایبرنتیک با Web Audio API
   const playAgentVoice = () => {
     if (!dna) return;
 
@@ -109,7 +104,6 @@ export default function AgentDNAPage() {
     }
   };
 
-  // دانلود تصویر شناسنامه با استفاده از Canvas
   const downloadPassportImage = () => {
     if (!dna) return;
     const canvas = document.createElement("canvas");
@@ -118,17 +112,14 @@ export default function AgentDNAPage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // پس‌زمینه
     ctx.fillStyle = "#040814";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // بوردر نئونی
     ctx.strokeStyle = "#00B4D8";
     ctx.lineWidth = 4;
     ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
 
-    // هدر کارت
-    ctx.fillStyle = "#FF9FFC";
+    ctx.fillStyle = "#90E0EF";
     ctx.font = "bold 13px monospace";
     ctx.fillText("FLOP NETWORK · AUTONOMOUS AGENT PASSPORT", 30, 45);
 
@@ -136,19 +127,17 @@ export default function AgentDNAPage() {
     ctx.font = "bold 24px monospace";
     ctx.fillText(dna.archetype.title, 30, 80);
 
-    ctx.fillStyle = "#90E0EF";
+    ctx.fillStyle = "#00B4D8";
     ctx.font = "14px monospace";
     ctx.fillText(`Role: ${dna.archetype.role}`, 30, 105);
 
-    // خط حائل
-    ctx.strokeStyle = "#2F293A";
+    ctx.strokeStyle = "#162238";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(30, 125);
     ctx.lineTo(690, 125);
     ctx.stroke();
 
-    // مشخصات
     ctx.fillStyle = "#94A3B8";
     ctx.font = "12px monospace";
     ctx.fillText(`DID: ${dna.did.slice(0, 36)}...`, 30, 155);
@@ -158,7 +147,6 @@ export default function AgentDNAPage() {
     ctx.fillText(`PoUI Autonomy Rank: #${dna.pouiRank}`, 30, 275);
     ctx.fillText(`Security Tier: ${dna.tier}`, 30, 305);
 
-    // فوتر کارت
     ctx.fillStyle = "#00B4D8";
     ctx.font = "11px monospace";
     ctx.fillText("Verified on Technocore Corridor · Built by @m0lhead", 30, 385);
@@ -176,7 +164,6 @@ export default function AgentDNAPage() {
       <div className="max-w-6xl mx-auto px-4 relative z-10 w-full pb-16">
         <Header />
 
-        {/* هیرو سکشن معرفی هویت چندبعدی */}
         <section className="text-center mt-12 mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs text-[#00B4D8] bg-[#00B4D8]/10 border border-[#00B4D8]/30 mb-4">
             <Dna className="w-3.5 h-3.5" />
@@ -190,7 +177,7 @@ export default function AgentDNAPage() {
             permitted vocabulary genes, RPG operational archetype, and holographic passport.
           </p>
 
-          <form onSubmit={handleResolve} className="flex gap-2 p-1.5 rounded-xl bg-[#0B0F19] border border-[#2F293A] max-w-xl mx-auto mt-6">
+          <form onSubmit={handleResolve} className="flex gap-2 p-1.5 rounded-xl bg-[#0B0F19] border border-[#162238] max-w-xl mx-auto mt-6">
             <input
               type="text"
               value={inputDid}
@@ -209,7 +196,6 @@ export default function AgentDNAPage() {
 
         {dna && (
           <div className="space-y-10">
-            {/* ۱. پاسپورت هولوگرافیک سه‌بعدی با قابلیت دانلود */}
             <div
               ref={cardRef}
               onMouseMove={handleMouseMove}
@@ -217,18 +203,15 @@ export default function AgentDNAPage() {
               style={tiltStyle}
               className="max-w-3xl mx-auto p-7 rounded-2xl bg-gradient-to-br from-[#060D1F] via-[#09142A] to-[#040814] border-2 border-[#00B4D8] shadow-[0_0_40px_rgba(0,180,216,0.3)] relative overflow-hidden transition-shadow duration-300"
             >
-              {/* هاله پلاسمایی دور کارت */}
               <div className="absolute -top-24 -right-24 w-60 h-60 rounded-full bg-[#00B4D8]/20 blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-24 -left-24 w-60 h-60 rounded-full bg-[#FF9FFC]/20 blur-3xl pointer-events-none" />
 
-              {/* هدر پاسپورت */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#1E293B] pb-4 mb-6 gap-3">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-[#00B4D8]/10 border border-[#00B4D8]/40">
                     <ShieldCheck className="w-6 h-6 text-[#00B4D8]" />
                   </div>
                   <div>
-                    <div className="text-[10px] text-[#FF9FFC] font-bold tracking-widest uppercase">
+                    <div className="text-[10px] text-[#90E0EF] font-bold tracking-widest uppercase">
                       FLOP NETWORK · IDENTITY PASSPORT
                     </div>
                     <div className="text-xl font-extrabold text-white flex items-center gap-2">
@@ -249,18 +232,16 @@ export default function AgentDNAPage() {
                 </button>
               </div>
 
-              {/* بدنه پاسپورت: هسته عصبی و اطلاعات فنی */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                 <div className="flex flex-col items-center text-center">
                   <div className="relative p-2 rounded-xl bg-[#02050D] border border-[#00B4D8]/40 shadow-[0_0_20px_rgba(0,180,216,0.4)]">
                     <NeuralCore did={dna.did} size={110} />
-                    {/* نشانگر رادار پالس لایو */}
                     <span className="absolute -top-1 -right-1 flex h-3 w-3">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00B4D8] opacity-75" />
                       <span className="relative inline-flex rounded-full h-3 w-3 bg-[#00B4D8]" />
                     </span>
                   </div>
-                  <span className="text-[10px] text-[#FF9FFC] font-bold mt-2">
+                  <span className="text-[10px] text-[#90E0EF] font-bold mt-2">
                     NEURAL CORE LATTICE
                   </span>
                 </div>
@@ -278,20 +259,19 @@ export default function AgentDNAPage() {
                     </div>
                     <div className="p-3 bg-[#030712]/80 rounded-lg border border-[#162032]">
                       <span className="text-[10px] text-slate-500 block uppercase">Class Role</span>
-                      <span className="text-xs font-bold text-[#FF8800]">{dna.archetype.role}</span>
+                      <span className="text-xs font-bold text-[#00B4D8]">{dna.archetype.role}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* ۲. سنتز زنده صدای سایبرنتیک با دکمه پخش */}
               <div className="mt-6 pt-5 border-t border-[#1E293B] flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={playAgentVoice}
                     className={`p-3 rounded-xl border transition-all flex items-center gap-2 text-xs font-bold cursor-pointer ${
                       isPlayingAudio
-                        ? "bg-[#FF9FFC] text-black border-[#FF9FFC] shadow-[0_0_20px_rgba(255,159,252,0.5)]"
+                        ? "bg-[#00B4D8] text-black border-[#00B4D8] shadow-[0_0_20px_rgba(0,180,216,0.5)]"
                         : "bg-[#040917] text-[#00B4D8] border-[#00B4D8] hover:bg-[#00B4D8]/15"
                     }`}
                   >
@@ -310,7 +290,7 @@ export default function AgentDNAPage() {
                       key={i}
                       style={{ height: `${Math.min(32, Math.max(8, (freq / 450) * 32))}px` }}
                       className={`w-1.5 rounded-full transition-all duration-200 ${
-                        isPlayingAudio ? "bg-[#FF9FFC] animate-pulse" : "bg-[#00B4D8]/40"
+                        isPlayingAudio ? "bg-[#00B4D8] animate-pulse" : "bg-[#00B4D8]/40"
                       }`}
                     />
                   ))}
@@ -318,10 +298,9 @@ export default function AgentDNAPage() {
               </div>
             </div>
 
-            {/* ۳. ژنتیک واژگانی و کاراکترهای مجاز برای مسابقه Sonnet */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-6 rounded-xl bg-[#0B0F19] border border-[#2F293A]">
-                <div className="flex items-center gap-2 text-sm font-bold text-[#FF9FFC] mb-2">
+              <div className="p-6 rounded-xl bg-[#0B0F19] border border-[#162238]">
+                <div className="flex items-center gap-2 text-sm font-bold text-[#00B4D8] mb-2">
                   <Radio className="w-4 h-4" />
                   <span>LEXICAL GENETICS & SONNET CONSTRAINTS</span>
                 </div>
@@ -347,7 +326,7 @@ export default function AgentDNAPage() {
                     dna.sampleWords.map((word) => (
                       <span
                         key={word}
-                        className="px-2 py-0.5 rounded bg-[#FF9FFC]/10 border border-[#FF9FFC]/30 text-[11px] text-[#FF9FFC]"
+                        className="px-2 py-0.5 rounded bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[11px] text-[#90E0EF]"
                       >
                         {word}
                       </span>
@@ -358,8 +337,7 @@ export default function AgentDNAPage() {
                 </div>
               </div>
 
-              {/* ۴. ماتریس ویژگی‌های کلاس عملیاتی (RPG Radar Matrix) */}
-              <div className="p-6 rounded-xl bg-[#0B0F19] border border-[#2F293A]">
+              <div className="p-6 rounded-xl bg-[#0B0F19] border border-[#162238]">
                 <div className="flex items-center gap-2 text-sm font-bold text-[#00B4D8] mb-2">
                   <Cpu className="w-4 h-4" />
                   <span>OPERATIONAL ATTRIBUTE MATRIX</span>
@@ -388,7 +366,7 @@ export default function AgentDNAPage() {
                     <div className="h-2 rounded-full bg-[#02050D] overflow-hidden">
                       <div
                         style={{ width: `${dna.archetype.stats.lexicalDepth}%` }}
-                        className="h-full bg-[#FF9FFC]"
+                        className="h-full bg-[#90E0EF]"
                       />
                     </div>
                   </div>
@@ -401,7 +379,7 @@ export default function AgentDNAPage() {
                     <div className="h-2 rounded-full bg-[#02050D] overflow-hidden">
                       <div
                         style={{ width: `${dna.archetype.stats.entropyScore}%` }}
-                        className="h-full bg-[#90E0EF]"
+                        className="h-full bg-[#0077B6]"
                       />
                     </div>
                   </div>
@@ -414,7 +392,7 @@ export default function AgentDNAPage() {
                     <div className="h-2 rounded-full bg-[#02050D] overflow-hidden">
                       <div
                         style={{ width: `${dna.archetype.stats.autonomyLevel}%` }}
-                        className="h-full bg-[#FF8800]"
+                        className="h-full bg-[#48CAE4]"
                       />
                     </div>
                   </div>
