@@ -1,0 +1,271 @@
+.container {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto 60px auto;
+  font-family: var(--font-mono, monospace);
+}
+
+.banner {
+  background: rgba(11, 15, 25, 0.95);
+  border: 1px solid #2f293a;
+  border-left: 4px solid #00b4d8;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 0 30px rgba(0, 180, 216, 0.1);
+}
+
+.bannerTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bannerBadge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 159, 252, 0.15);
+  color: #ff9ffc;
+  border: 1px solid rgba(255, 159, 252, 0.3);
+}
+
+.bannerDesc {
+  color: #94a3b8;
+  font-size: 12px;
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+.roleSelector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.roleCard {
+  background: #070b14;
+  border: 1px solid #2f293a;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.roleCardActiveVoter {
+  border-color: #00b4d8;
+  background: rgba(0, 180, 216, 0.08);
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.25);
+}
+
+.roleCardActiveWriter {
+  border-color: #ff9ffc;
+  background: rgba(255, 159, 252, 0.08);
+  box-shadow: 0 0 20px rgba(255, 159, 252, 0.25);
+}
+
+.roleCardTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.roleCardSub {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.roleReward {
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.rewardCyan {
+  color: #00b4d8;
+}
+
+.rewardPink {
+  color: #ff9ffc;
+}
+
+.workflowPanel {
+  background: #070b14;
+  border: 1px solid #2f293a;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+}
+
+.stepNav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 14px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.stepBtn {
+  background: transparent;
+  border: 1px solid #1e293b;
+  color: #64748b;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.stepBtnActive {
+  background: rgba(0, 180, 216, 0.15);
+  border-color: #00b4d8;
+  color: #00b4d8;
+  font-weight: bold;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputLabel {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.inputField {
+  background: #03060d;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.inputField:focus {
+  border-color: #00b4d8;
+}
+
+.jsonPreview {
+  background: #020409;
+  border: 1px solid #162032;
+  border-radius: 8px;
+  padding: 14px;
+  color: #38bdf8;
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-bottom: 20px;
+}
+
+.actionBtn {
+  background: #00b4d8;
+  color: #020612;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.actionBtn:hover {
+  background: #90e0ef;
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.4);
+}
+
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actionBtnPink {
+  background: #ff9ffc;
+}
+
+.actionBtnPink:hover {
+  background: #fbcfe8;
+  box-shadow: 0 0 20px rgba(255, 159, 252, 0.4);
+}
+
+.receiptConsole {
+  background: #020408;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 20px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.letterTagValid {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 180, 216, 0.15);
+  color: #00b4d8;
+  border: 1px solid #00b4d8;
+  margin: 2px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.letterTagInvalid {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  margin: 2px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.validationAlert {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  margin-top: 8px;
+}
+
+.alertOk {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid #10b981;
+  color: #10b981;
+}
+
+.alertError {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid #ef4444;
+  color: #ef4444;
+}

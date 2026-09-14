@@ -3,34 +3,44 @@ import { FLOP_CONFIG } from "@/lib/constants";
 
 export async function POST(req: Request) {
   try {
-    const { did, x_account, role } = await req.json();
+    const { room, did, payload } = await req.json();
 
-    if (!did || !x_account) {
-      return NextResponse.json({ ok: false, error: "DID and X account are required" }, { status: 400 });
+    if (!room || !did || !payload) {
+      return NextResponse.json(
+        { ok: false, error: "Missing room, did, or payload" },
+        { status: 400 }
+      );
     }
 
-    const payload = {
-      type: "sonnet.register.v1",
-      contest_id: FLOP_CONFIG.CONTEST_ID,
-      request_id: `user-${Date.now()}`,
-      role: role || "writer",
-      did,
-      x_account,
-      timestamp: Date.now(),
-    };
+    const payloadString = typeof payload === "string" ? payload : JSON.stringify(payload);
 
-    // فوروارد به اتاق ثبت‌نام Technocore
-    await fetch(`${FLOP_CONFIG.TECHNOCORE_UPSTREAM}/r/mb-sonnet-2-registration`, {
+    // Forward request upstream to the Technocore referee corridor
+    const upstreamUrl = `${FLOP_CONFIG.TECHNOCORE_UPSTREAM}/r/${room}`;
+    const upstreamRes = await fetch(upstreamUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": `FlopCoreTerminal/1.0 (${did.slice(0, 16)})`,
+      },
       body: JSON.stringify({
         author: did,
-        did,
-        content: JSON.stringify(payload),
+        did: did,
+        content: payloadString,
       }),
-    }).catch(() => {});
+    });
 
-    return NextResponse.json({ ok: true, request_id: payload.request_id });
+    if (!upstreamRes.ok) {
+      // Fallback via GET parameter beacon if room blocks standard POST
+      const fallbackUrl = `${upstreamUrl}?did=${encodeURIComponent(did)}&msg=${encodeURIComponent(payloadString)}`;
+      await fetch(fallbackUrl).catch(() => {});
+    }
+
+    return NextResponse.json({
+      ok: true,
+      request_id: payload.request_id || `req-${Date.now()}`,
+      room,
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal error";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
