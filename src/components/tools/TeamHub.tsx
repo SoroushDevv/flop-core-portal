@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import styles from "./TeamHub.module.css";
-import { Users, UserPlus, ShieldAlert, CheckCircle2, Trophy, PlusCircle } from "lucide-react";
+import { Users, UserPlus, CheckCircle2, Trophy, PlusCircle } from "lucide-react";
 import { FLOP_CONFIG } from "@/lib/constants";
 
 interface TeamMember {
@@ -26,12 +26,10 @@ export const TeamHub: React.FC = () => {
   const [userX, setUserX] = useState("");
   const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
 
-  // New Team Form State
   const [newTeamName, setNewTeamName] = useState("");
   const [newGameId, setNewGameId] = useState("");
   const [newTeamDesc, setNewTeamDesc] = useState("");
 
-  // Default squads state with your official team pinned
   const [squads, setSquads] = useState<Squad[]>([
     {
       id: "host-vanguard",
@@ -69,7 +67,6 @@ export const TeamHub: React.FC = () => {
     },
   ]);
 
-  // Load persistence if available in browser
   useEffect(() => {
     const saved = localStorage.getItem("flop_community_squads");
     if (saved) {
@@ -84,7 +81,6 @@ export const TeamHub: React.FC = () => {
     localStorage.setItem("flop_community_squads", JSON.stringify(updated));
   };
 
-  // Join existing squad
   const handleJoinSquad = async (squadId: string) => {
     if (!userDid.trim().startsWith("did:key")) {
       alert("Please enter a valid did:key public key.");
@@ -117,7 +113,6 @@ export const TeamHub: React.FC = () => {
     saveSquads(updated);
     setStatusFeedback(`Successfully joined ${squad.name}! Dispatching roster update to referee...`);
 
-    // Optional dispatch to daemon backend
     try {
       await fetch("/api/agent/daemon", {
         method: "POST",
@@ -137,7 +132,6 @@ export const TeamHub: React.FC = () => {
     } catch {}
   };
 
-  // Create new squad
   const handleCreateSquad = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTeamName.trim() || !newGameId.trim() || !userDid.trim()) {
@@ -171,7 +165,6 @@ export const TeamHub: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {/* Overview Banner */}
       <div className={styles.headerBanner}>
         <div className={styles.headerTitle}>
           <Users className="w-6 h-6 text-[#00B4D8]" />
@@ -184,8 +177,7 @@ export const TeamHub: React.FC = () => {
         </p>
       </div>
 
-      {/* Global Identity Configuration */}
-      <div style={{ background: "#070B14", border: "1px solid #1E293B", borderRadius: "12px", padding: "16px", marginBottom: "28px" }}>
+      <div style={{ background: "#070B14", border: "1px solid #162238", borderRadius: "12px", padding: "16px", marginBottom: "28px" }}>
         <div style={{ fontSize: "11px", color: "#00B4D8", fontWeight: "bold", textTransform: "uppercase", marginBottom: "8px" }}>
           YOUR AGENT IDENTIFIER (REQUIRED TO JOIN OR LEAD)
         </div>
@@ -201,7 +193,7 @@ export const TeamHub: React.FC = () => {
             type="text"
             value={userX}
             onChange={(e) => setUserX(e.target.value)}
-            placeholder="X (Twitter) handle (e.g. Satoshi)"
+            placeholder="X handle (e.g. Satoshi)"
             style={{ width: "220px" }}
             className={styles.joinInput}
           />
@@ -213,7 +205,6 @@ export const TeamHub: React.FC = () => {
         )}
       </div>
 
-      {/* Featured Section: Your Own Host Team */}
       <div className={styles.featuredTeamCard}>
         <div className={styles.featuredGlow} />
         <div className={styles.featuredTop}>
@@ -221,7 +212,7 @@ export const TeamHub: React.FC = () => {
             <span className={styles.featuredHostBadge}>FEATURED OFFICIAL HOST SQUAD</span>
             <h3 className={styles.teamTitle}>{hostSquad.name}</h3>
             <div style={{ fontSize: "11px", color: "#90E0EF", marginTop: "2px" }}>
-              Game ID: <code style={{ color: "#FF9FFC" }}>#{hostSquad.gameId}</code> · Leader: @{FLOP_CONFIG.TWITTER_HANDLE}
+              Game ID: <code style={{ color: "#00B4D8" }}>#{hostSquad.gameId}</code> · Leader: @{FLOP_CONFIG.TWITTER_HANDLE}
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
@@ -234,7 +225,6 @@ export const TeamHub: React.FC = () => {
 
         <p className={styles.teamDesc}>{hostSquad.description}</p>
 
-        {/* 8 Roster Slots Grid */}
         <div className={styles.rosterSlots}>
           {Array.from({ length: hostSquad.maxSlots }).map((_, idx) => {
             const member = hostSquad.members[idx];
@@ -247,7 +237,7 @@ export const TeamHub: React.FC = () => {
                   {member.did.slice(0, 10)}...{member.did.slice(-4)}
                 </span>
                 {member.xAccount && (
-                  <span style={{ color: "#FF9FFC", fontSize: "9px" }}>@{member.xAccount}</span>
+                  <span style={{ color: "#90E0EF", fontSize: "9px" }}>@{member.xAccount}</span>
                 )}
               </div>
             ) : (
@@ -271,7 +261,6 @@ export const TeamHub: React.FC = () => {
         </div>
       </div>
 
-      {/* Community Squads Listing */}
       <div className={styles.sectionHeader}>
         <h3 className={styles.sectionTitle}>ALLIED AGENT SQUADS ({communitySquads.length})</h3>
       </div>
@@ -281,7 +270,7 @@ export const TeamHub: React.FC = () => {
           <div key={squad.id} className={styles.teamCard}>
             <div>
               <div className={styles.teamMeta}>
-                <span style={{ fontSize: "10px", color: "#FF9FFC", border: "1px solid rgba(255,159,252,0.3)", padding: "2px 6px", borderRadius: "4px" }}>
+                <span style={{ fontSize: "10px", color: "#00B4D8", border: "1px solid rgba(0,180,216,0.3)", padding: "2px 6px", borderRadius: "4px" }}>
                   #{squad.gameId}
                 </span>
                 <span className={styles.slotProgress}>
@@ -289,7 +278,7 @@ export const TeamHub: React.FC = () => {
                 </span>
               </div>
 
-              <h4 style={{ fontSize: "14px", fontWeight: "bold", color: "#ffffff", marginBottom: "6px" }}>
+              <h4 style={{ fontSize: "14px", fontWeight: "bold", color: "#f8fafc", marginBottom: "6px" }}>
                 {squad.name}
               </h4>
               <p style={{ fontSize: "11px", color: "#94a3b8", lineHeight: "1.5", marginBottom: "14px" }}>
@@ -304,7 +293,7 @@ export const TeamHub: React.FC = () => {
             <button
               type="button"
               onClick={() => handleJoinSquad(squad.id)}
-              className={styles.btnPink}
+              className={styles.btnBlue}
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>REQUEST SQUAD ADMISSION</span>
@@ -313,11 +302,10 @@ export const TeamHub: React.FC = () => {
         ))}
       </div>
 
-      {/* Deploy Your Own Custom Team Form */}
       <div className={styles.createTeamBox}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
           <PlusCircle className="w-5 h-5 text-[#00B4D8]" />
-          <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#ffffff" }}>
+          <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f8fafc" }}>
             DEPLOY A NEW TEAM ROSTER
           </h3>
         </div>
