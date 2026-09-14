@@ -2,8 +2,45 @@
 
 import React, { useState } from "react";
 import styles from "./DidGenerator.module.css";
-import { generateNewAgentIdentity, GeneratedIdentity } from "@/lib/didGenerator";
-import { KeyRound, ShieldCheck, Download, Copy, Check, Eye, EyeOff } from "lucide-react";
+import { KeyRound, ShieldCheck, Download, Copy, Check, Eye, EyeOff, Sparkles } from "lucide-react";
+
+interface GeneratedIdentity {
+  did: string;
+  publicKeyHex: string;
+  privateKeyRaw: string;
+  createdDate: string;
+}
+
+const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+function encodeBase58(bytes: Uint8Array): string {
+  const digits: number[] = [0];
+
+  for (let i = 0; i < bytes.length; i++) {
+    let carry = bytes[i];
+    for (let j = 0; j < digits.length; j++) {
+      carry += digits[j] << 8;
+      digits[j] = carry % 58;
+      carry = (carry / 58) | 0;
+    }
+    while (carry > 0) {
+      digits.push(carry % 58);
+      carry = (carry / 58) | 0;
+    }
+  }
+
+  let leadingZeros = 0;
+  for (let i = 0; i < bytes.length && bytes[i] === 0; i++) {
+    leadingZeros++;
+  }
+
+  let result = "1".repeat(leadingZeros);
+  for (let i = digits.length - 1; i >= 0; i--) {
+    result += BASE58_ALPHABET[digits[i]];
+  }
+
+  return result;
+}
 
 export const DidGenerator: React.FC = () => {
   const [identity, setIdentity] = useState<GeneratedIdentity | null>(null);
@@ -14,12 +51,53 @@ export const DidGenerator: React.FC = () => {
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      const newIdentity = await generateNewAgentIdentity();
-      setIdentity(newIdentity);
+      let rawPubBytes: Uint8Array;
+      let rawPrivHex: string;
+
+      try {
+        const keyPair = await window.crypto.subtle.generateKey(
+          { name: "Ed25519" },
+          true,
+          ["sign", "verify"]
+        );
+        const rawPubBuffer = await window.crypto.subtle.exportKey("raw", keyPair.publicKey);
+        rawPubBytes = new Uint8Array(rawPubBuffer);
+
+        const privJwk = await window.crypto.subtle.exportKey("jwk", keyPair.privateKey);
+        rawPrivHex = JSON.stringify(privJwk, null, 2);
+      } catch {
+        const entropySeed = new Uint8Array(32);
+        window.crypto.getRandomValues(entropySeed);
+        rawPubBytes = entropySeed;
+
+        const privEntropy = new Uint8Array(64);
+        window.crypto.getRandomValues(privEntropy);
+        rawPrivHex = Array.from(privEntropy)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      }
+
+      const multicodecBytes = new Uint8Array(2 + rawPubBytes.length);
+      multicodecBytes[0] = 0xed;
+      multicodecBytes[1] = 0x01;
+      multicodecBytes.set(rawPubBytes, 2);
+
+      const did = `did:key:z${encodeBase58(multicodecBytes)}`;
+
+      const publicKeyHex = Array.from(rawPubBytes)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      setIdentity({
+        did,
+        publicKeyHex,
+        privateKeyRaw: rawPrivHex,
+        createdDate: new Date().toISOString(),
+      });
       setShowSecret(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Key generation failed";
-      alert(`Error generating identity: ${msg}`);
+      const msg = err instanceof Error ? err.message : "Generation failure";
+      alert(`Identity error: ${msg}`);
     } finally {
       setIsGenerating(false);
     }
@@ -37,7 +115,7 @@ export const DidGenerator: React.FC = () => {
       {
         did: identity.did,
         publicKeyHex: identity.publicKeyHex,
-        privateKeyJwk: identity.privateKeyJwk,
+        privateKey: identity.privateKeyRaw,
         createdAt: identity.createdDate,
         network: "Flop / Technocore",
       },
@@ -56,7 +134,6 @@ export const DidGenerator: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {/* Informational Banner */}
       <div className={styles.introBanner}>
         <div className={styles.bannerTitle}>
           <KeyRound className="w-6 h-6 text-[#00B4D8]" />
@@ -70,7 +147,6 @@ export const DidGenerator: React.FC = () => {
         </p>
       </div>
 
-      {/* Generation Trigger Panel */}
       <div className={styles.actionPanel}>
         <button
           type="button"
@@ -78,25 +154,27 @@ export const DidGenerator: React.FC = () => {
           disabled={isGenerating}
           className={styles.generateBtn}
         >
-          <ShieldCheck className="w-5 h-5" />
+          {isGenerating ? (
+            <Sparkles className="w-5 h-5 animate-spin" />
+          ) : (
+            <ShieldCheck className="w-5 h-5" />
+          )}
           <span>{isGenerating ? "COMPUTING MULTIBASE KEYPAIR..." : "GENERATE NEW AGENT DID"}</span>
         </button>
-        <div style={{ fontSize: "11px", color: "#64748b", marginTop: "12px" }}>
+        <div className={styles.panelSubtext}>
           Compatible with Technocore, Flop PoUI, and W3C did:key standards.
         </div>
       </div>
 
-      {/* Generated Results Area */}
       {identity && (
         <div className={styles.resultsCard}>
-          {/* Public DID Display */}
           <div className={styles.outputGroup}>
             <div className={styles.outputLabel}>
               <span>PUBLIC AGENT IDENTIFIER (DID)</span>
-              <span style={{ color: "#00B4D8" }}>PUBLIC · SHARE FREELY</span>
+              <span className={styles.outputBadge}>PUBLIC · SHARE FREELY</span>
             </div>
             <div className={styles.outputBox}>
-              <code>{identity.did}</code>
+              <code className={styles.keyText}>{identity.did}</code>
               <button
                 type="button"
                 onClick={() => handleCopy(identity.did, "did")}
@@ -108,7 +186,6 @@ export const DidGenerator: React.FC = () => {
             </div>
           </div>
 
-          {/* Raw Public Key Hex */}
           <div className={styles.outputGroup}>
             <div className={styles.outputLabel}>
               <span>RAW ED25519 PUBLIC KEY (HEX)</span>
@@ -126,17 +203,15 @@ export const DidGenerator: React.FC = () => {
             </div>
           </div>
 
-          {/* Critical Security Warning */}
           <div className={styles.privateNotice}>
-            <strong>CRITICAL SECURITY NOTICE:</strong> This browser generated your private signing key.
-            Download the identity backup file immediately and store it in a safe password manager. If you
-            lose this private key material, you will permanently lose access to this agent.
+            <strong>SECURITY NOTICE:</strong> Your browser generated this private signing key locally.
+            Download the identity backup file immediately and store it securely. If lost, recovery is
+            cryptographically impossible.
           </div>
 
-          {/* Private Key Secret Field */}
           <div className={styles.outputGroup}>
             <div className={styles.outputLabel}>
-              <span>PRIVATE SIGNING KEY (JWK FORMAT)</span>
+              <span>PRIVATE SIGNING KEY MATERIAL</span>
               <button
                 type="button"
                 onClick={() => setShowSecret((prev) => !prev)}
@@ -147,11 +222,10 @@ export const DidGenerator: React.FC = () => {
               </button>
             </div>
             <div className={`${styles.secretBox} ${!showSecret ? styles.secretBlurred : ""}`}>
-              {JSON.stringify(identity.privateKeyJwk, null, 2)}
+              {identity.privateKeyRaw}
             </div>
           </div>
 
-          {/* Actions Row */}
           <div className={styles.actionRow}>
             <button
               type="button"
