@@ -1,0 +1,53 @@
+.botWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  user-select: none;
+}
+
+.botSvg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 8px 18px rgba(0, 180, 216, 0.28));
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.botWrapper:hover .botSvg {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.eyeGlow {
+  filter: drop-shadow(0 0 6px rgba(144, 224, 239, 0.9));
+}
+
+.antennaPulse {
+  animation: antennaBlink 2.2s ease-in-out infinite alternate;
+}
+
+.haloFloat {
+  animation: haloPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes antennaBlink {
+  0% {
+    opacity: 0.6;
+    filter: brightness(0.9);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1.4) drop-shadow(0 0 6px #00b4d8);
+  }
+}
+
+@keyframes haloPulse {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-1.5px) scale(1.05);
+    opacity: 1;
+    filter: drop-shadow(0 0 8px rgba(0, 180, 216, 0.8));
+  }
+}
