@@ -41,7 +41,6 @@ export const AgentRunner: React.FC = () => {
         id: `${Date.now()}-${Math.random()}`,
         timestamp: time,
         text,
-        type,
       },
     ]);
   };
