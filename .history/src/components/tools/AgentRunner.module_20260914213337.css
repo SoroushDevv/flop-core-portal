@@ -1,0 +1,232 @@
+.container {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto 60px auto;
+  font-family: var(--font-mono, monospace);
+}
+
+.introBanner {
+  background: rgba(11, 15, 25, 0.95);
+  border: 1px solid #162238;
+  border-left: 4px solid #00b4d8;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 0 30px rgba(0, 180, 216, 0.1);
+}
+
+.bannerTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bannerBadge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 180, 216, 0.15);
+  color: #00b4d8;
+  border: 1px solid rgba(0, 180, 216, 0.3);
+  text-transform: uppercase;
+}
+
+.bannerDesc {
+  color: #94a3b8;
+  font-size: 12px;
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.metricCard {
+  background: #070b14;
+  border: 1px solid #162238;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.metricLabel {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metricValue {
+  font-size: 22px;
+  font-weight: 800;
+  color: #00b4d8;
+}
+
+.metricSub {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.controlPanel {
+  background: #070b14;
+  border: 1px solid #162238;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+}
+
+.configGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputLabel {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.inputField {
+  background: #02050d;
+  border: 1px solid #162238;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #f1f5f9;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.inputField:focus {
+  border-color: #00b4d8;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btnActivate {
+  background: #00b4d8;
+  color: #020612;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.3);
+}
+
+.btnActivate:hover {
+  background: #90e0ef;
+  box-shadow: 0 0 30px rgba(0, 180, 216, 0.5);
+}
+
+.btnDeactivate {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btnDeactivate:hover {
+  background: #ef4444;
+  color: #020612;
+}
+
+.terminalContainer {
+  background: #020409;
+  border: 1px solid #162238;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
+}
+
+.terminalHeader {
+  background: #070b14;
+  border-bottom: 1px solid #162238;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.terminalTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: #00b4d8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+}
+
+.terminalLogs {
+  padding: 18px;
+  height: 380px;
+  overflow-y: auto;
+  font-size: 11px;
+  line-height: 1.7;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.logLine {
+  display: flex;
+  gap: 8px;
+  word-break: break-all;
+}
+
+.logTimestamp {
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.logTextInfo {
+  color: #94a3b8;
+}
+
+.logTextSuccess {
+  color: #00b4d8;
+}
+
+.logTextWarning {
+  color: #90e0ef;
+}

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./AgentRunner.module.css";
-import { Play, Square, Activity, Terminal } from "lucide-react";
+import { Play, Square, Activity, Terminal, Shield, Cpu, Wifi } from "lucide-react";
 
 interface LogEntry {
   id: string;
@@ -22,15 +22,12 @@ export const AgentRunner: React.FC = () => {
   const [verifiedResponses, setVerifiedResponses] = useState(0);
   const [logs, setLogs] = useState<LogEntry[]>([]);
 
-  const terminalLogsRef = useRef<HTMLDivElement>(null);
+  const logsEndRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Scroll ONLY inside the terminal container without moving the window page
   useEffect(() => {
-    if (terminalLogsRef.current) {
-      terminalLogsRef.current.scrollTop = terminalLogsRef.current.scrollHeight;
-    }
+    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
 
   const addLog = (text: string, type: "info" | "success" | "warning" = "info") => {
@@ -235,8 +232,7 @@ export const AgentRunner: React.FC = () => {
           </span>
         </div>
 
-        {/* Local scroll container: strictly isolated */}
-        <div ref={terminalLogsRef} className={styles.terminalLogs}>
+        <div className={styles.terminalLogs}>
           {logs.length === 0 ? (
             <div style={{ color: "#475569" }}>
               Daemon idle. Enter DID and click Activate Agent Daemon to stream live telemetry.
@@ -259,6 +255,7 @@ export const AgentRunner: React.FC = () => {
               </div>
             ))
           )}
+          <div ref={logsEndRef} />
         </div>
       </div>
     </div>
