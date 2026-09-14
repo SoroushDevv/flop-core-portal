@@ -7,14 +7,17 @@ import { AgentAvatarBot } from "./AgentAvatarBot";
 import { Terminal, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 
 export const CyberBotAssistant: React.FC = () => {
-  const [message, setMessage] = useState<BotMessagePayload | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [message, setMessage] = useState<BotMessagePayload | null>({
+    text: "FlopCore Autonomous Persona active. Ready for Technocore network instructions.",
+    type: "info",
+    duration: 5000,
+  });
+  const [isVisible, setIsVisible] = useState(true);
   const [activeDid, setActiveDid] = useState<string>(
     "did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj"
   );
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Sync active user identity from storage or custom events
   useEffect(() => {
     const checkUserIdentity = () => {
       if (typeof window !== "undefined") {
@@ -27,7 +30,16 @@ export const CyberBotAssistant: React.FC = () => {
 
     checkUserIdentity();
     window.addEventListener("storage", checkUserIdentity);
-    return () => window.removeEventListener("storage", checkUserIdentity);
+
+    // Initial message display for 5 seconds
+    timeoutRef.current = setTimeout(() => {
+      setIsVisible(false);
+    }, 5000);
+
+    return () => {
+      window.removeEventListener("storage", checkUserIdentity);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -44,7 +56,7 @@ export const CyberBotAssistant: React.FC = () => {
 
       timeoutRef.current = setTimeout(() => {
         setIsVisible(false);
-        setTimeout(() => setMessage(null), 300);
+        setTimeout(() => setMessage(null), 350);
       }, payload.duration || 4500);
     };
 
@@ -55,31 +67,56 @@ export const CyberBotAssistant: React.FC = () => {
   const getStyleClass = () => {
     if (!message) return styles.bubbleInfo;
     switch (message.type) {
-      case "success": return styles.bubbleSuccess;
-      case "error": return styles.bubbleError;
-      case "warning": return styles.bubbleWarning;
-      default: return styles.bubbleInfo;
+      case "success":
+        return styles.bubbleSuccess;
+      case "error":
+        return styles.bubbleError;
+      case "warning":
+        return styles.bubbleWarning;
+      default:
+        return styles.bubbleInfo;
     }
   };
 
   const getIcon = () => {
     if (!message) return <Terminal className="w-3 h-3" />;
     switch (message.type) {
-      case "success": return <CheckCircle2 className="w-3 h-3" />;
-      case "error": return <XCircle className="w-3 h-3" />;
-      case "warning": return <AlertTriangle className="w-3 h-3" />;
-      default: return <Terminal className="w-3 h-3" />;
+      case "success":
+        return <CheckCircle2 className="w-3 h-3" />;
+      case "error":
+        return <XCircle className="w-3 h-3" />;
+      case "warning":
+        return <AlertTriangle className="w-3 h-3" />;
+      default:
+        return <Terminal className="w-3 h-3" />;
     }
   };
 
   const getTitle = () => {
     if (!message) return "AGENT SYSTEM";
     switch (message.type) {
-      case "success": return "VERIFIED";
-      case "error": return "TRANSACTION FAILED";
-      case "warning": return "PROTOCOL NOTICE";
-      default: return "CORRIDOR RELAY";
+      case "success":
+        return "VERIFIED";
+      case "error":
+        return "TRANSACTION FAILED";
+      case "warning":
+        return "PROTOCOL NOTICE";
+      default:
+        return "CORRIDOR RELAY";
     }
+  };
+
+  const handleBotClick = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setMessage({
+      text: `Identity Node [${activeDid.slice(0, 16)}...] synchronized with Technocore corridor.`,
+      type: "info",
+      duration: 4000,
+    });
+    setIsVisible(true);
+    timeoutRef.current = setTimeout(() => {
+      setIsVisible(false);
+    }, 4000);
   };
 
   return (
@@ -97,22 +134,12 @@ export const CyberBotAssistant: React.FC = () => {
         </div>
       )}
 
-      {/* 3D Capsule-Head Robot matching the exact user screenshot */}
       <div
         className={`${styles.botAvatar} ${isVisible ? styles.botTalking : ""}`}
-        onClick={() => {
-          if (!isVisible) {
-            setIsVisible(true);
-            setMessage({
-              text: `Agent ${activeDid.slice(0, 16)}... online and ready for Technocore corridor instructions.`,
-              type: "info",
-              duration: 4000,
-            });
-            setTimeout(() => setIsVisible(false), 4000);
-          }
-        }}
+        onClick={handleBotClick}
       >
-        <AgentAvatarBot did={activeDid} size={74} isAnimated={true} />
+        <span className={styles.activeRing} />
+        <AgentAvatarBot did={activeDid} size={76} isAnimated={true} />
       </div>
     </div>
   );
