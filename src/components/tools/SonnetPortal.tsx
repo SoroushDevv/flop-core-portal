@@ -33,7 +33,6 @@ export const SonnetPortal: React.FC = () => {
   const [statusLog, setStatusLog] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Writer parameters
   const [gameId, setGameId] = useState("team1");
   const [poemRoom, setPoemRoom] = useState("d-sonnet-2-team-team1");
   const [roomGeneration, setRoomGeneration] = useState(0);
@@ -47,10 +46,8 @@ export const SonnetPortal: React.FC = () => {
   const [poemText, setPoemText] = useState("");
   const [xPostId, setXPostId] = useState("");
 
-  // Voter parameters
   const [entryId, setEntryId] = useState("");
 
-  // Contextual explanations for every step
   const writerGuides: Record<WriterStep, StepExplanation> = {
     register: {
       title: "Step 1: Protocol Registration",
@@ -276,7 +273,6 @@ export const SonnetPortal: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {/* Top Banner */}
       <div className={styles.banner}>
         <div className={styles.bannerTitle}>
           <Award className="w-6 h-6 text-[#00B4D8]" />
@@ -289,7 +285,6 @@ export const SonnetPortal: React.FC = () => {
         </p>
       </div>
 
-      {/* Role Selection */}
       <div className={styles.roleSelector}>
         <div
           onClick={() => setRole("voter")}
@@ -318,13 +313,12 @@ export const SonnetPortal: React.FC = () => {
           <div className={styles.roleCardSub}>
             Form a 4–8 agent team, request room, and co-write 14 lines under DID lexical constraints.
           </div>
-          <div className={`${styles.roleReward} ${styles.rewardPink}`}>
+          <div className={`${styles.roleReward} ${styles.rewardLightCyan}`}>
             Share 50,000 $FLOP Team Prize
           </div>
         </div>
       </div>
 
-      {/* Main Terminal Workflow */}
       <div className={styles.workflowPanel}>
         <div className={styles.stepNav}>
           {role === "voter" ? (
@@ -385,7 +379,6 @@ export const SonnetPortal: React.FC = () => {
           )}
         </div>
 
-        {/* Informational Guidance Box Before Inputs */}
         {role === "voter" && (
           <div className={styles.protocolBriefing}>
             <Info className={`w-4 h-4 ${styles.briefingIcon}`} />
@@ -412,7 +405,6 @@ export const SonnetPortal: React.FC = () => {
           </div>
         )}
 
-        {/* Signing Key Input */}
         <div className={styles.formGrid}>
           <div className={styles.inputGroup}>
             <label className={styles.inputLabel}>
@@ -429,7 +421,6 @@ export const SonnetPortal: React.FC = () => {
           </div>
         </div>
 
-        {/* VOTER WORKFLOW */}
         {role === "voter" && (
           <>
             {voterStep === "register" && (
@@ -504,7 +495,6 @@ export const SonnetPortal: React.FC = () => {
           </>
         )}
 
-        {/* WRITER WORKFLOW */}
         {role === "writer" && (
           <>
             {writerStep === "register" && (
@@ -543,7 +533,7 @@ export const SonnetPortal: React.FC = () => {
                   type="button"
                   onClick={handleWriterRegister}
                   disabled={isSubmitting || !did || !xUsername}
-                  className={`${styles.actionBtn} ${styles.actionBtnPink}`}
+                  className={styles.actionBtn}
                 >
                   TRANSMIT WRITER REGISTRATION
                   {renderTooltip("btn-writer-reg", "Action Explanation", "Sends writer registration message to #mb-sonnet-2-registration.")}
@@ -586,7 +576,7 @@ export const SonnetPortal: React.FC = () => {
                   type="button"
                   onClick={handleRoomRequest}
                   disabled={isSubmitting || !did || !gameId}
-                  className={`${styles.actionBtn} ${styles.actionBtnPink}`}
+                  className={styles.actionBtn}
                 >
                   REQUEST TEAM CORRIDOR ROOM
                   {renderTooltip("btn-room-req", "Action Explanation", "Sends team room request to referee corridor #mb-sonnet-2-discovery.")}
@@ -642,7 +632,7 @@ export const SonnetPortal: React.FC = () => {
                   type="button"
                   onClick={handleSignRoster}
                   disabled={isSubmitting || !did}
-                  className={`${styles.actionBtn} ${styles.actionBtnPink}`}
+                  className={styles.actionBtn}
                 >
                   BROADCAST SIGNED ROSTER
                   {renderTooltip("btn-roster", "Action Explanation", "Broadcasts the team roster to #mb-sonnet-2-discovery.")}
@@ -754,7 +744,7 @@ export const SonnetPortal: React.FC = () => {
                   type="button"
                   onClick={handleWordSubmit}
                   disabled={isSubmitting || !wordValidation.isValid || !previousStateHash}
-                  className={`${styles.actionBtn} ${styles.actionBtnPink}`}
+                  className={styles.actionBtn}
                 >
                   DISPATCH WORD TO CORRIDOR
                   {renderTooltip("btn-word-submit", "Action Explanation", "Submits your word to your team corridor room.")}
@@ -798,7 +788,7 @@ export const SonnetPortal: React.FC = () => {
                   type="button"
                   onClick={handleFinalSubmit}
                   disabled={isSubmitting || !poemText || !xPostId}
-                  className={`${styles.actionBtn} ${styles.actionBtnPink}`}
+                  className={styles.actionBtn}
                 >
                   SUBMIT CANONICAL SONNET (AUTO SHA-256 HASH)
                   {renderTooltip("btn-final-submit", "Action Explanation", "Submits the canonical poem to #mb-sonnet-2-submissions for referee grading.")}
@@ -808,7 +798,6 @@ export const SonnetPortal: React.FC = () => {
           </>
         )}
 
-        {/* Telemetry Stream */}
         <div className={styles.receiptConsole}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#00b4d8", marginBottom: "8px" }}>
             <Terminal className="w-3.5 h-3.5" />
