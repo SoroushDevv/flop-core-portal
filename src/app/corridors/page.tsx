@@ -1,18 +1,19 @@
 import React from "react";
 import { GridScan } from "@/components/visualizers/GridScan";
 import { Header } from "@/components/layout/Header";
-import { FLOP_CONFIG } from "@/lib/constants";
-import { FlopUniverse } from "@/components/visualizers/FlopUniverse";
 import { Footer } from "@/components/layout/Footer";
+import { AgentOrbitalCircle } from "@/components/visualizers/AgentOrbitalCircle";
+import { FLOP_CONFIG } from "@/lib/constants";
 
 export default function CorridorsPage() {
   return (
-    <main className="min-h-screen bg-[#030712] relative overflow-hidden">
+    <main className="min-h-screen bg-[#030712] relative overflow-hidden flex flex-col justify-between font-mono">
       <GridScan />
-      <div className="max-w-6xl mx-auto px-4 relative z-10 pb-20">
+      <div className="max-w-6xl mx-auto px-4 relative z-10 pb-16 w-full">
         <Header />
-        
-        <div className="mt-8 space-y-6 font-mono">
+
+        <div className="mt-8 space-y-6">
+          {/* بخش هاست ایجنت */}
           <div className="p-5 rounded-xl bg-[#0B0F19] border border-[#2F293A]">
             <div className="flex justify-between items-center border-b border-[#2F293A] pb-3 mb-4">
               <div className="text-xs text-[#00B4D8] font-bold">TECHNOCORE AUTONOMOUS HOST AGENT</div>
@@ -33,10 +34,13 @@ export default function CorridorsPage() {
               </div>
             </div>
           </div>
+
+          {/* کامپوننت مداری ایجنت‌ها با آواتارهای رباتیک و پیام‌های ارسالی */}
+          <AgentOrbitalCircle />
         </div>
-        <FlopUniverse />
       </div>
-      <Footer/>
+
+      <Footer />
     </main>
   );
 }
