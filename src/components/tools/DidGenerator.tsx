@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import styles from "./DidGenerator.module.css";
 import { KeyRound, ShieldCheck, Download, Copy, Check, Eye, EyeOff, Sparkles } from "lucide-react";
+import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
+import { botSpeak } from "@/lib/botUtils";
 
 interface GeneratedIdentity {
   did: string;
@@ -88,16 +90,26 @@ export const DidGenerator: React.FC = () => {
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
 
-      setIdentity({
+      const newId = {
         did,
         publicKeyHex,
         privateKeyRaw: rawPrivHex,
         createdDate: new Date().toISOString(),
-      });
+      };
+
+      setIdentity(newId);
       setShowSecret(false);
+
+      // Save locally to update the assistant bot avatar across the entire session
+      if (typeof window !== "undefined") {
+        localStorage.setItem("flop_active_did", did);
+        window.dispatchEvent(new Event("storage"));
+      }
+
+      botSpeak(`Identity initialized! Your personalized bot face is now online: ${did.slice(0, 16)}...`, "success");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Generation failure";
-      alert(`Identity error: ${msg}`);
+      botSpeak(`Key generation failed: ${msg}`, "error");
     } finally {
       setIsGenerating(false);
     }
@@ -107,6 +119,7 @@ export const DidGenerator: React.FC = () => {
     navigator.clipboard.writeText(text);
     setCopiedField(fieldKey);
     setTimeout(() => setCopiedField(null), 2000);
+    botSpeak("Copied to clipboard!", "info", 2000);
   };
 
   const handleDownloadBackup = () => {
@@ -130,6 +143,7 @@ export const DidGenerator: React.FC = () => {
     a.download = `flop-identity-${identity.did.slice(8, 16)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    botSpeak("Backup downloaded. Keep your private key safe!", "success");
   };
 
   return (
@@ -137,13 +151,12 @@ export const DidGenerator: React.FC = () => {
       <div className={styles.introBanner}>
         <div className={styles.bannerTitle}>
           <KeyRound className="w-6 h-6 text-[#00B4D8]" />
-          <span>AUTONOMOUS DID KEYPAIR GENERATOR</span>
+          <span>AUTONOMOUS DID KEYPAIR & BOT GENERATOR</span>
           <span className={styles.bannerBadge}>CLIENT-SIDE ED25519</span>
         </div>
         <p className={styles.bannerDesc}>
-          Create a non-custodial decentralized identifier (`did:key:z6Mk...`) for your autonomous agent.
-          All cryptographic keys are generated locally inside your browser using the Web Crypto API.
-          No private keys or credentials ever leave your machine.
+          Generate a decentralized identifier (`did:key:z6Mk...`) for your autonomous agent.
+          A unique 3D cyber-robot avatar is procedurally minted from your keyhash.
         </p>
       </div>
 
@@ -159,7 +172,7 @@ export const DidGenerator: React.FC = () => {
           ) : (
             <ShieldCheck className="w-5 h-5" />
           )}
-          <span>{isGenerating ? "COMPUTING MULTIBASE KEYPAIR..." : "GENERATE NEW AGENT DID"}</span>
+          <span>{isGenerating ? "MINTING PROCEDURAL AGENT BOT..." : "GENERATE NEW AGENT & BOT"}</span>
         </button>
         <div className={styles.panelSubtext}>
           Compatible with Technocore, Flop PoUI, and W3C did:key standards.
@@ -168,6 +181,20 @@ export const DidGenerator: React.FC = () => {
 
       {identity && (
         <div className={styles.resultsCard}>
+          {/* Visual bot preview directly in result card */}
+          <div style={{ display: "flex", alignItems: "center", gap: "20px", borderBottom: "1px solid #162238", paddingBottom: "16px" }}>
+            <AgentAvatarBot did={identity.did} size={88} />
+            <div>
+              <span className={styles.outputBadge}>SYNTHESIZED AGENT ROBOT</span>
+              <h3 style={{ fontSize: "16px", color: "#ffffff", fontWeight: 800, margin: "4px 0" }}>
+                Active Cybernetic Persona
+              </h3>
+              <p style={{ fontSize: "11px", color: "#94a3b8", margin: 0 }}>
+                This 3D bot now represents your agent across corridors, challenge votes, and terminal toasts.
+              </p>
+            </div>
+          </div>
+
           <div className={styles.outputGroup}>
             <div className={styles.outputLabel}>
               <span>PUBLIC AGENT IDENTIFIER (DID)</span>
