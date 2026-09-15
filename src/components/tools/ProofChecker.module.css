@@ -1,0 +1,304 @@
+.container {
+  width: 100%;
+  max-width: 860px;
+  margin: 12px auto 80px auto;
+  font-family: var(--font-mono, monospace);
+  color: #f8fafc;
+  user-select: none;
+}
+
+.introBanner {
+  background: rgba(11, 15, 25, 0.95);
+  border: 1px solid #162238;
+  border-left: 4px solid #00b4d8;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 0 35px rgba(0, 180, 216, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bannerBadgeRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bannerBadge {
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: rgba(0, 180, 216, 0.15);
+  color: #00b4d8;
+  border: 1px solid rgba(0, 180, 216, 0.35);
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.bannerTitle {
+  font-size: 26px;
+  font-weight: 900;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  letter-spacing: -0.5px;
+}
+
+.bannerTitleHighlight {
+  color: #00b4d8;
+}
+
+.bannerSubtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+.verifierCard {
+  background: #060c18;
+  border: 1.5px solid #16253b;
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 180, 216, 0.08);
+  margin-bottom: 28px;
+  transition: border-color 0.25s;
+}
+
+.verifierCard:focus-within {
+  border-color: rgba(0, 180, 216, 0.5);
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.inputField {
+  background: #02050c;
+  border: 1px solid #16253b;
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #f1f5f9;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.inputField:focus {
+  border-color: #00b4d8;
+  box-shadow: 0 0 16px rgba(0, 180, 216, 0.2);
+}
+
+.inputField::placeholder {
+  color: #475569;
+}
+
+.twoColumnRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .twoColumnRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.verifyBtn {
+  background: #00b4d8;
+  color: #020612;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 28px;
+  font-size: 13px;
+  font-weight: 900;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 25px rgba(0, 180, 216, 0.35);
+  flex: 1;
+}
+
+.verifyBtn:hover {
+  background: #90e0ef;
+  box-shadow: 0 0 35px rgba(0, 180, 216, 0.55);
+  transform: translateY(-1px);
+}
+
+.sampleLoadBtn {
+  background: #081220;
+  color: #90e0ef;
+  border: 1px solid rgba(0, 180, 216, 0.3);
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.sampleLoadBtn:hover {
+  border-color: #00b4d8;
+  background: rgba(0, 180, 216, 0.12);
+}
+
+/* --- Verification Verdict Card --- */
+.verdictCard {
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  margin-top: 24px;
+}
+
+.verdictValid {
+  background: rgba(6, 32, 24, 0.95);
+  border: 1.5px solid #10b981;
+  box-shadow: 0 0 40px rgba(16, 185, 129, 0.2);
+}
+
+.verdictInvalid {
+  background: rgba(36, 10, 14, 0.95);
+  border: 1.5px solid #ef4444;
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.2);
+}
+
+.verdictHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 14px;
+}
+
+.verdictStatusGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.verdictStatusTitle {
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+.verdictValid .verdictStatusTitle {
+  color: #10b981;
+}
+
+.verdictInvalid .verdictStatusTitle {
+  color: #ef4444;
+}
+
+.verdictBadge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.verdictValid .verdictBadge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.verdictInvalid .verdictBadge {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.agentProofDetails {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 14px 18px;
+  border-radius: 14px;
+}
+
+.canonicalPayloadViewer {
+  background: #02050c;
+  border: 1px solid #142033;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 11px;
+  color: #38bdf8;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.footerExplainer {
+  background: rgba(4, 10, 22, 0.95);
+  border: 1px solid rgba(0, 180, 216, 0.25);
+  border-radius: 18px;
+  padding: 22px 24px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #94a3b8;
+}
+
+.footerExplainerTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: #00b4d8;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
