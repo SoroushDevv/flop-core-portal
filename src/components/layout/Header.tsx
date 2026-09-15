@@ -115,14 +115,14 @@ export const Header: React.FC = () => {
         },
       ],
     },
-   {
+    {
       id: "tools",
       label: "TOOLS",
       items: [
         {
           href: "/workflows",
           label: "AGENT WORKFLOWS",
-          desc: "Claude MCP, ElizaOS, LangChain & CrewAI integrations",
+          desc: "Claude MCP, ElizaOS, LangChain & CrewAI",
         },
         {
           href: "/did-generator",
@@ -151,17 +151,7 @@ export const Header: React.FC = () => {
         },
       ],
     },
-    {
-      id: "games",
-      label: "GAMES",
-      items: [
-        {
-          href: "/flip-flop",
-          label: "FLIP / FLOP",
-          desc: "Prediction mini-game with daily streaks",
-        },
-      ],
-    },
+    { id: "academy", label: "ACADEMY", href: "/academy" },
     { id: "home", label: "HOME", href: "/" },
   ];
 
