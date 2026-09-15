@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo } from "react";
-import styles from "./AgentSpaceshipBot.module.css";
 import { AgentAvatarBot } from "./AgentAvatarBot";
 
 interface AgentSpaceshipBotProps {
@@ -58,9 +57,35 @@ export const AgentSpaceshipBot: React.FC<AgentSpaceshipBotProps> = ({
 
   return (
     <div
-      style={{ width: size, height: size }}
-      className={`${styles.shipContainer} ${isAnimated ? styles.hoverAnim : ""}`}
+      style={{
+        width: size,
+        height: size,
+        display: "inline-flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        userSelect: "none",
+        animation: isAnimated ? "shipHoverAnim 3.5s ease-in-out infinite alternate" : "none",
+      }}
     >
+      <style>{`
+        @keyframes shipHoverAnim {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-7px) rotate(1.5deg); }
+          100% { transform: translateY(2px) rotate(-1deg); }
+        }
+        @keyframes shipFlameFlicker {
+          0% { transform: scaleY(0.85) scaleX(0.95); opacity: 0.8; }
+          100% { transform: scaleY(1.2) scaleX(1.05); opacity: 1; filter: drop-shadow(0 0 8px currentColor); }
+        }
+        @keyframes shipEnergyPulse {
+          0%, 100% { opacity: 0.3; transform: scale(0.95); }
+          50% { opacity: 0.8; transform: scale(1.05); }
+        }
+      `}</style>
+
+      {/* Capsule-head bot avatar in the cockpit */}
       <div
         style={{
           position: "absolute",
@@ -71,6 +96,7 @@ export const AgentSpaceshipBot: React.FC<AgentSpaceshipBotProps> = ({
         <AgentAvatarBot did={did} size={botSize} isAnimated={isAnimated} />
       </div>
 
+      {/* Spaceship Hull Vector */}
       <svg
         width={size}
         height={size}
@@ -92,6 +118,7 @@ export const AgentSpaceshipBot: React.FC<AgentSpaceshipBotProps> = ({
           </linearGradient>
         </defs>
 
+        {/* Chassis Type 0: Dart Interceptor */}
         {shipTraits.chassisType === 0 && (
           <g>
             <path
@@ -111,6 +138,7 @@ export const AgentSpaceshipBot: React.FC<AgentSpaceshipBotProps> = ({
           </g>
         )}
 
+        {/* Chassis Type 1: Disc Pod */}
         {shipTraits.chassisType === 1 && (
           <g>
             <ellipse
@@ -131,7 +159,10 @@ export const AgentSpaceshipBot: React.FC<AgentSpaceshipBotProps> = ({
               stroke={shipTraits.energy.primary}
               strokeWidth="1"
               strokeDasharray="4 3"
-              className={isAnimated ? styles.energyPulse : ""}
+              style={{
+                animation: isAnimated ? "shipEnergyPulse 2s ease-in-out infinite" : "none",
+                transformOrigin: "50px 58px",
+              }}
             />
             <circle cx="16" cy="58" r="2" fill={shipTraits.energy.primary} />
             <circle cx="84" cy="58" r="2" fill={shipTraits.energy.primary} />
@@ -139,6 +170,7 @@ export const AgentSpaceshipBot: React.FC<AgentSpaceshipBotProps> = ({
           </g>
         )}
 
+        {/* Chassis Type 2: Hex Fighter */}
         {shipTraits.chassisType === 2 && (
           <g>
             <polygon
@@ -153,6 +185,7 @@ export const AgentSpaceshipBot: React.FC<AgentSpaceshipBotProps> = ({
           </g>
         )}
 
+        {/* Chassis Type 3: Heavy Hover Skiff */}
         {shipTraits.chassisType === 3 && (
           <g>
             <rect
@@ -190,7 +223,14 @@ export const AgentSpaceshipBot: React.FC<AgentSpaceshipBotProps> = ({
           </g>
         )}
 
-        <g className={isAnimated ? styles.thrusterGlow : ""} style={{ color: shipTraits.energy.primary }}>
+        {/* Plasma Thrusters */}
+        <g
+          style={{
+            color: shipTraits.energy.primary,
+            transformOrigin: "center top",
+            animation: isAnimated ? "shipFlameFlicker 0.15s infinite alternate ease-in-out" : "none",
+          }}
+        >
           {shipTraits.thrusterCount === 1 && (
             <polygon
               points="44,78 56,78 50,96"
