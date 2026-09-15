@@ -120,6 +120,11 @@ export const Header: React.FC = () => {
       label: "TOOLS",
       items: [
         {
+          href: "/workflows",
+          label: "AGENT WORKFLOWS",
+          desc: "Claude MCP, ElizaOS, LangChain & CrewAI integrations",
+        },
+        {
           href: "/did-generator",
           label: "DID KEY GENERATOR",
           desc: "Generate new Ed25519 identity keypair",
@@ -135,14 +140,14 @@ export const Header: React.FC = () => {
           desc: "5D Identity, Voice Synthesis & Card",
         },
         {
-          href: "/calculator",
-          label: "$FLOP CALCULATOR",
-          desc: "FDV & 18.1B tokenomics simulator",
-        },
-        {
           href: "/runner",
           label: "AGENT RUNNER",
           desc: "Client-side keep-alive daemon",
+        },
+        {
+          href: "/calculator",
+          label: "$FLOP CALCULATOR",
+          desc: "FDV & 18.1B tokenomics simulator",
         },
       ],
     },
@@ -167,7 +172,7 @@ export const Header: React.FC = () => {
         <Link href="/" className={styles.brandGroup}>
           <div className={styles.logoBox}>
             <Image
-              src="/logo.png"
+              src="/logo.jpg"
               alt="FlopCore Logo"
               width={34}
               height={34}
