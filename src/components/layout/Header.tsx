@@ -3,9 +3,21 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { ChevronDown, Lock, Unlock } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import styles from "./Header.module.css";
+import {
+  ChevronDown,
+  ChevronUp,
+  FlaskConical,
+  Copy,
+  CreditCard,
+  Radio,
+  LogOut,
+  Lock,
+} from "lucide-react";
 import { LoginModal } from "@/components/auth/LoginModal";
+import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
+import { botSpeak } from "@/lib/botUtils";
 
 interface SubItem {
   href: string;
@@ -22,24 +34,68 @@ interface NavCategory {
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [activeDid, setActiveDid] = useState("");
-  const navRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [activeDid, setActiveDid] = useState<string>(
+    "did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj"
+  );
+
+  const navRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Synchronize authenticated state
   useEffect(() => {
     const syncAuth = () => {
       if (typeof window !== "undefined") {
+        const storedDid = localStorage.getItem("flop_active_did");
+        if (storedDid && storedDid.startsWith("did:key:")) {
+          setActiveDid(storedDid);
+        }
         setIsUnlocked(localStorage.getItem("flop_is_unlocked") === "true");
-        const did = localStorage.getItem("flop_active_did");
-        if (did) setActiveDid(did);
       }
     };
+
     syncAuth();
     window.addEventListener("storage", syncAuth);
     return () => window.removeEventListener("storage", syncAuth);
-  }, [isLoginModalOpen]);
+  }, []);
+
+  // Handle outside click dismissal
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  const formatShortDid = (did: string) => {
+    if (!did) return "z6Mk...8crj";
+    const body = did.replace("did:key:", "");
+    return `${body.slice(0, 6)}...${body.slice(-4)}`;
+  };
+
+  const handleCopyDid = () => {
+    navigator.clipboard.writeText(activeDid);
+    botSpeak("Agent identifier copied to clipboard!", "info", 2000);
+  };
+
+  const handleSignOut = () => {
+    localStorage.removeItem("flop_is_unlocked");
+    setIsUnlocked(false);
+    setIsProfileMenuOpen(false);
+    botSpeak("Agent signed out. Private keys locked in browser vault.", "warning");
+  };
 
   const categories: NavCategory[] = [
     { id: "corridors", label: "CORRIDORS", href: "/corridors" },
@@ -99,36 +155,28 @@ export const Header: React.FC = () => {
     { id: "home", label: "HOME", href: "/" },
   ];
 
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (navRef.current && !navRef.current.contains(e.target as Node)) {
-        setOpenDropdown(null);
-      }
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
-
   return (
     <>
-      <header className="flex flex-col md:flex-row items-center justify-between py-6 border-b border-[#162238] relative z-30 gap-4 font-mono">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-[#00B4D8]/40 shadow-[0_0_15px_rgba(0,180,216,0.3)]">
+      <header className={styles.headerContainer}>
+        {/* Brand Identity */}
+        <Link href="/" className={styles.brandGroup}>
+          <div className={styles.logoBox}>
             <Image
               src="/logo.png"
               alt="FlopCore Logo"
-              width={32}
-              height={32}
-              className="w-full h-full object-cover"
+              width={34}
+              height={34}
+              className={styles.logoImg}
             />
           </div>
-          <div className="text-xl font-bold tracking-wider text-white">
-            FLOP<span className="text-[#00B4D8]">CORE</span>
+          <div className={styles.brandTitle}>
+            FLOP<span className={styles.brandCyan}>CORE</span>
           </div>
         </Link>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <nav ref={navRef} className="flex flex-wrap items-center gap-2">
+        <div className={styles.rightControls}>
+          {/* Navigation Links */}
+          <nav ref={navRef} className={styles.navBar}>
             {categories.map((cat) => {
               if (cat.href) {
                 const isActive = pathname === cat.href;
@@ -136,11 +184,7 @@ export const Header: React.FC = () => {
                   <Link
                     key={cat.id}
                     href={cat.href}
-                    className={`px-3.5 py-1.5 rounded-md text-xs transition-all border ${
-                      isActive
-                        ? "bg-[#00B4D8]/10 text-[#00B4D8] border-[#00B4D8] shadow-[0_0_12px_rgba(0,180,216,0.3)]"
-                        : "border-transparent text-slate-400 hover:text-slate-200 hover:border-[#162238]"
-                    }`}
+                    className={`${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
                   >
                     {cat.label}
                   </Link>
@@ -151,14 +195,12 @@ export const Header: React.FC = () => {
               const isOpen = openDropdown === cat.id;
 
               return (
-                <div key={cat.id} className="relative">
+                <div key={cat.id} style={{ position: "relative" }}>
                   <button
                     type="button"
                     onClick={() => setOpenDropdown(isOpen ? null : cat.id)}
-                    className={`px-3.5 py-1.5 rounded-md text-xs transition-all border flex items-center gap-1.5 cursor-pointer ${
-                      isDropdownActive || isOpen
-                        ? "bg-[#00B4D8]/10 text-[#00B4D8] border-[#00B4D8] shadow-[0_0_12px_rgba(0,180,216,0.25)]"
-                        : "border-transparent text-slate-400 hover:text-slate-200 hover:border-[#162238]"
+                    className={`${styles.dropdownBtn} ${
+                      isDropdownActive || isOpen ? styles.dropdownBtnActive : ""
                     }`}
                   >
                     <span>{cat.label}</span>
@@ -170,7 +212,7 @@ export const Header: React.FC = () => {
                   </button>
 
                   {isOpen && cat.items && (
-                    <div className="absolute top-full mt-2 left-0 min-w-[240px] bg-[#070B14]/95 border border-[#00B4D8]/40 rounded-xl p-2 shadow-[0_10px_30px_rgba(0,0,0,0.8),0_0_20px_rgba(0,180,216,0.2)] backdrop-blur-md z-50 animate-fade-in">
+                    <div className={styles.dropdownMenu}>
                       {cat.items.map((sub) => {
                         const isSubActive = pathname === sub.href;
                         return (
@@ -178,23 +220,18 @@ export const Header: React.FC = () => {
                             key={sub.href}
                             href={sub.href}
                             onClick={() => setOpenDropdown(null)}
-                            className={`block p-2.5 rounded-lg transition-all ${
-                              isSubActive
-                                ? "bg-[#00B4D8]/15 border border-[#00B4D8]/50"
-                                : "hover:bg-[#0E1726]"
+                            className={`${styles.dropdownItem} ${
+                              isSubActive ? styles.dropdownItemActive : ""
                             }`}
                           >
                             <div
-                              className={`text-xs font-bold ${
-                                isSubActive ? "text-[#00B4D8]" : "text-slate-200"
-                              }`}
+                              className={styles.dropdownItemTitle}
+                              style={{ color: isSubActive ? "#00B4D8" : "#f1f5f9" }}
                             >
                               {sub.label}
                             </div>
                             {sub.desc && (
-                              <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">
-                                {sub.desc}
-                              </div>
+                              <div className={styles.dropdownItemDesc}>{sub.desc}</div>
                             )}
                           </Link>
                         );
@@ -206,31 +243,99 @@ export const Header: React.FC = () => {
             })}
           </nav>
 
-          {/* Login / Agent Vault Modal Trigger */}
-          <button
-            type="button"
-            onClick={() => setIsLoginModalOpen(true)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer ${
-              isUnlocked
-                ? "bg-[#00B4D8]/15 border-[#00B4D8] text-[#00B4D8] shadow-[0_0_12px_rgba(0,180,216,0.25)]"
-                : "bg-[#0B0F19] border-[#162238] text-slate-300 hover:border-[#00B4D8]"
-            }`}
-          >
+          {/* Testnet Badge + User Identity Cluster */}
+          <div ref={profileRef} className={styles.userAuthCluster}>
+            <div className={styles.testnetPill}>
+              <FlaskConical className={styles.testnetFlask} />
+              <span>Testnet</span>
+              <span className={styles.testnetSoonBadge}>SOON</span>
+            </div>
+
             {isUnlocked ? (
-              <>
-                <Unlock className="w-3.5 h-3.5 text-[#00B4D8]" />
-                <span>{activeDid ? `${activeDid.slice(0, 10)}...` : "UNLOCKED"}</span>
-              </>
+              <button
+                type="button"
+                onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+                className={styles.profilePillBtn}
+              >
+                <AgentAvatarBot did={activeDid} size={28} isAnimated={false} />
+                <span>{formatShortDid(activeDid)}</span>
+                {isProfileMenuOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-[#00B4D8]" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                )}
+              </button>
             ) : (
-              <>
-                <Lock className="w-3.5 h-3.5 text-slate-400" />
+              <button
+                type="button"
+                onClick={() => setIsLoginModalOpen(true)}
+                className={styles.loginPromptBtn}
+              >
+                <Lock className="w-3.5 h-3.5 text-[#00B4D8]" />
                 <span>UNLOCK AGENT</span>
-              </>
+              </button>
             )}
-          </button>
+
+            {/* Profile Dropdown Menu matching screenshot */}
+            {isProfileMenuOpen && (
+              <div className={styles.profileDropdown}>
+                <div className={styles.signedInLabel}>SIGNED IN AS</div>
+                <div className={styles.didTextBox}>{activeDid}</div>
+
+                <div className={styles.actionLinksBox}>
+                  <button
+                    type="button"
+                    onClick={handleCopyDid}
+                    className={styles.profileActionRow}
+                  >
+                    <Copy className={styles.profileRowIcon} />
+                    <span>Copy this DID</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileMenuOpen(false);
+                      router.push("/dna");
+                    }}
+                    className={styles.profileActionRow}
+                  >
+                    <CreditCard className={styles.profileRowIcon} />
+                    <span>See my card</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileMenuOpen(false);
+                      router.push("/corridors");
+                    }}
+                    className={styles.profileActionRow}
+                  >
+                    <Radio className={styles.profileRowIcon} />
+                    <span>Go to rooms</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className={styles.profileActionRow}
+                  >
+                    <LogOut className={styles.profileRowIcon} />
+                    <span>Sign out</span>
+                  </button>
+                </div>
+
+                <div className={styles.footerExplainer}>
+                  This browser is holding your key unlocked so you stay signed in. Sign out when you are done on a shared computer.
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
+      {/* Unlock Login Modal */}
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
