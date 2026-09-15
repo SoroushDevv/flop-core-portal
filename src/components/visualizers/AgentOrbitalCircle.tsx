@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import styles from "./AgentOrbitalCircle.module.css";
-import { Users, Bot, MessageSquare } from "lucide-react";
-import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
+import { Bot, MessageSquare, Rocket } from "lucide-react";
+import { AgentSpaceshipBot } from "@/components/ui/AgentSpaceshipBot";
 
 interface AgentNode {
   id: string;
@@ -27,7 +27,7 @@ export const AgentOrbitalCircle: React.FC = () => {
       id: "ag-1",
       did: "did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj",
       name: "Host_Agent_01",
-      lastMessage: "Dispatching heartbeat proof to #kibble",
+      lastMessage: "Patrolling corridor orbit #kibble with quantum warp",
       orbitIndex: 0,
       angleOffset: 0,
       speed: 0.007,
@@ -171,30 +171,30 @@ export const AgentOrbitalCircle: React.FC = () => {
     return () => cancelAnimationFrame(animId);
   }, []);
 
-  const orbitRadii = [130, 210, 290];
+  const orbitRadii = [135, 215, 300];
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.titleArea}>
-          <Bot className={styles.titleIcon} />
+          <Rocket className={styles.titleIcon} />
           <h2 className={styles.titleText}>
-            CORRIDOR ORBITAL MATRIX{" "}
-            <span className={styles.titleHighlight}>· AUTONOMOUS BOT SPHERE</span>
+            CORRIDOR ORBITAL FLEET{" "}
+            <span className={styles.titleHighlight}>· AUTONOMOUS SPACESHIP MATRIX</span>
           </h2>
         </div>
         <div className={styles.legendArea}>
           <span className={styles.legendItem}>
             <span className={styles.legendDot} style={{ backgroundColor: "#10B981" }} />
-            Active
+            Active Fleet
           </span>
           <span className={styles.legendItem}>
             <span className={styles.legendDot} style={{ backgroundColor: "#00B4D8" }} />
-            Inference
+            Inference Cruising
           </span>
           <span className={styles.legendItem}>
             <span className={styles.legendDot} style={{ backgroundColor: "#64748B" }} />
-            Standby
+            Docked / Standby
           </span>
         </div>
       </div>
@@ -215,10 +215,10 @@ export const AgentOrbitalCircle: React.FC = () => {
 
         <div className={styles.centerSlot}>
           <div className={styles.centerIconBox}>
-            <Users className="w-4 h-4" />
+            <Bot className="w-5 h-5 text-[#00B4D8]" />
           </div>
           <div className={styles.centerCount}>10K+</div>
-          <div className={styles.centerSub}>ACTIVE AGENTS</div>
+          <div className={styles.centerSub}>ORBITAL FLEET</div>
           <div className={styles.centerBadge}>PoUI VERIFIED</div>
         </div>
 
@@ -245,15 +245,28 @@ export const AgentOrbitalCircle: React.FC = () => {
                 className={`${styles.avatarShell} ${
                   isHovered ? styles.avatarShellActive : ""
                 }`}
+                style={{
+                  background: "transparent",
+                  border: isHovered ? "2px solid #00B4D8" : "none",
+                  boxShadow: isHovered ? "0 0 30px rgba(0, 180, 216, 0.7)" : "none",
+                  width: "72px",
+                  height: "72px",
+                }}
               >
                 <div className={styles.botInner}>
-                  <AgentAvatarBot did={agent.did} size={50} isAnimated={!isHovered} />
+                  <AgentSpaceshipBot
+                    did={agent.did}
+                    size={68}
+                    isAnimated={!isHovered}
+                  />
                 </div>
 
                 <span
                   style={{
                     backgroundColor: agent.badgeColor,
                     color: agent.badgeColor,
+                    bottom: "4px",
+                    right: "4px",
                   }}
                   className={styles.statusIndicator}
                 />
