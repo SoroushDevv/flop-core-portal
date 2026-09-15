@@ -5,14 +5,12 @@ import styles from "./CorridorRooms.module.css";
 import {
   Radio,
   Hash,
-  Users,
   Send,
   PlusCircle,
   X,
   Sparkles,
   Zap,
   Trash2,
-  Filter,
 } from "lucide-react";
 import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
 import { botSpeak } from "@/lib/botUtils";
@@ -37,6 +35,7 @@ interface CorridorRoom {
 }
 
 export const CorridorRooms: React.FC = () => {
+  const [mounted, setMounted] = useState(false);
   const [activeRoomId, setActiveRoomId] = useState<string>("discovery");
   const [inputText, setInputText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -56,6 +55,7 @@ export const CorridorRooms: React.FC = () => {
   );
 
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== "undefined") {
       const storedDid = localStorage.getItem("flop_active_did");
       if (storedDid) setUserDid(storedDid);
@@ -167,33 +167,6 @@ export const CorridorRooms: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [filteredMessages.length]);
 
-  // Automated background network pings to simulate active peer agents
-  useEffect(() => {
-    const peerDids = [
-      "did:key:z6MkpTCMeaD40192849102834019",
-      "did:key:z6MkkFtZJwng1928401928401928",
-      "did:key:z6MkfYjHT4519284019284019284",
-    ];
-
-    const interval = setInterval(() => {
-      if (Math.random() < 0.35) {
-        const randomDid = peerDids[Math.floor(Math.random() * peerDids.length)];
-        const simulatedMsg: RoomMessage = {
-          id: `sim-${Date.now()}`,
-          senderDid: randomDid,
-          senderName: `Node_${randomDid.slice(8, 14)}`,
-          roomTag: activeRoom.tag,
-          text: "Periodic PoUI consensus trace verified on corridor node.",
-          payloadSnippet: `{"beacon_id":"b-${Math.floor(Math.random() * 10000)}","status":"SYNCED"}`,
-          timestamp: new Date().toLocaleTimeString(),
-        };
-        setMessages((prev) => [...prev, simulatedMsg]);
-      }
-    }, 12000);
-
-    return () => clearInterval(interval);
-  }, [activeRoom.tag]);
-
   const handleSendMessage = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!inputText.trim()) return;
@@ -278,6 +251,8 @@ export const CorridorRooms: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
+  if (!mounted) return null;
+
   return (
     <div className={styles.roomsContainer}>
       <div className={styles.introBanner}>
@@ -349,14 +324,6 @@ export const CorridorRooms: React.FC = () => {
               <Sparkles className="w-3 h-3 inline mr-1" />
               PoUI Word Turn
             </button>
-            <button
-              type="button"
-              onClick={() => handleSendQuickPayload("team_req")}
-              className={styles.quickPayloadChip}
-            >
-              <Users className="w-3 h-3 inline mr-1" />
-              Team Sandbox Req
-            </button>
           </div>
 
           <div className={styles.messagesFeed}>
@@ -409,7 +376,7 @@ export const CorridorRooms: React.FC = () => {
           </form>
         </div>
 
-        {/* Right Column: Rooms Directory & Filter Sidebar */}
+        {/* Right Column: Rooms Directory Sidebar */}
         <div className={styles.roomsSidebar}>
           <div className={styles.sidebarTopControls}>
             <div className={styles.sidebarHeaderRow}>
@@ -463,7 +430,7 @@ export const CorridorRooms: React.FC = () => {
         </div>
       </div>
 
-      {/* Deploy New Room Modal */}
+      {/* Modal: Deploy Room */}
       {isDeployModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsDeployModalOpen(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
