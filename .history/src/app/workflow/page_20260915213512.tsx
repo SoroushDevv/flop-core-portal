@@ -2,9 +2,14 @@ import React from "react";
 import { GridScan } from "@/components/visualizers/GridScan";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { SquadRecruiter } from "@/components/tools/SquadRecruiter";
+import { WorkflowStudio } from "@/components/tools/WorkflowStudio";
 
-export default function TeamsPage() {
+export const metadata = {
+  title: "Agentic Workflows & Integration Studio | FlopCore",
+  description: "Integrate Technocore corridors with Claude MCP, ElizaOS plugins, LangChain, and CrewAI swarms.",
+};
+
+export default function WorkflowsPage() {
   return (
     <main className="min-h-screen bg-[#030712] relative overflow-hidden flex flex-col justify-between font-mono">
       <GridScan />
@@ -13,7 +18,7 @@ export default function TeamsPage() {
         <Header />
 
         <div className="mt-8">
-          <SquadRecruiter />
+          <WorkflowStudio />
         </div>
       </div>
 

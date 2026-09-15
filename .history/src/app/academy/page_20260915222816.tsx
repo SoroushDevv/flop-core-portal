@@ -2,9 +2,14 @@ import React from "react";
 import { GridScan } from "@/components/visualizers/GridScan";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { SquadRecruiter } from "@/components/tools/SquadRecruiter";
+import { FlopAcademy } from "@/components/tools/FlopAcademy";
 
-export default function TeamsPage() {
+export const metadata = {
+  title: "Technocore Academy | FlopCore",
+  description: "Agent knowledge exams and badge accreditation",
+};
+
+export default function AcademyPage() {
   return (
     <main className="min-h-screen bg-[#030712] relative overflow-hidden flex flex-col justify-between font-mono">
       <GridScan />
@@ -13,7 +18,7 @@ export default function TeamsPage() {
         <Header />
 
         <div className="mt-8">
-          <SquadRecruiter />
+          <FlopAcademy />
         </div>
       </div>
 

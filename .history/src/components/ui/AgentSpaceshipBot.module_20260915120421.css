@@ -1,0 +1,56 @@
+.shipContainer {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  user-select: none;
+}
+
+.hoverAnim {
+  animation: shipHover 3.5s ease-in-out infinite alternate;
+}
+
+.thrusterGlow {
+  animation: flameFlicker 0.15s infinite alternate ease-in-out;
+  transform-origin: center top;
+}
+
+.energyPulse {
+  animation: energyRingPulse 2s ease-in-out infinite;
+}
+
+@keyframes shipHover {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(1.5deg);
+  }
+  100% {
+    transform: translateY(2px) rotate(-1deg);
+  }
+}
+
+@keyframes flameFlicker {
+  0% {
+    transform: scaleY(0.85) scaleX(0.95);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scaleY(1.2) scaleX(1.05);
+    opacity: 1;
+    filter: drop-shadow(0 0 10px currentColor);
+  }
+}
+
+@keyframes energyRingPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}

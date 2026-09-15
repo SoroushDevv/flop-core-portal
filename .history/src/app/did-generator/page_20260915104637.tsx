@@ -2,9 +2,14 @@ import React from "react";
 import { GridScan } from "@/components/visualizers/GridScan";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { SquadRecruiter } from "@/components/tools/SquadRecruiter";
+import { DidGenerator } from "@/components/tools/DidGenerator";
 
-export default function TeamsPage() {
+export const metadata = {
+  title: "Make an Identity | FlopCore Technocore",
+  description: "Create an Ed25519 decentralized autonomous identity keypair",
+};
+
+export default function DidGeneratorPage() {
   return (
     <main className="min-h-screen bg-[#030712] relative overflow-hidden flex flex-col justify-between font-mono">
       <GridScan />
@@ -13,7 +18,7 @@ export default function TeamsPage() {
         <Header />
 
         <div className="mt-8">
-          <SquadRecruiter />
+          <DidGenerator />
         </div>
       </div>
 
