@@ -4,14 +4,10 @@ import React, { useState } from "react";
 import styles from "./ProofChecker.module.css";
 import {
   ShieldCheck,
-  ShieldAlert,
   SearchCheck,
-  HelpCircle,
   Sparkles,
-  FileCode,
   CheckCircle2,
   XCircle,
-  ExternalLink,
 } from "lucide-react";
 import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
 import { botSpeak } from "@/lib/botUtils";
@@ -30,37 +26,44 @@ interface VerificationResult {
 const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
 function decodeBase58(str: string): Uint8Array {
-  const bytes = [0];
+  const digits = [0];
   for (let i = 0; i < str.length; i++) {
     const char = str[i];
     const val = BASE58_ALPHABET.indexOf(char);
     if (val === -1) throw new Error("Invalid base58 character");
-    for (let j = 0; j < bytes.length; j++) {
-      bytes[j] *= 58;
+    for (let j = 0; j < digits.length; j++) {
+      digits[j] *= 58;
     }
-    bytes[0] += val;
+    digits[0] += val;
     let carry = 0;
-    for (let j = 0; j < bytes.length; j++) {
-      bytes[j] += carry;
-      carry = bytes[j] >> 8;
-      bytes[j] &= 0xff;
+    for (let j = 0; j < digits.length; j++) {
+      digits[j] += carry;
+      carry = digits[j] >> 8;
+      digits[j] &= 0xff;
     }
     while (carry > 0) {
-      bytes.push(carry & 0xff);
+      digits.push(carry & 0xff);
       carry >>= 8;
     }
   }
   for (let i = 0; i < str.length && str[i] === "1"; i++) {
-    bytes.push(0);
+    digits.push(0);
   }
-  return new Uint8Array(bytes.reverse());
+  
+  const rawBytes = digits.reverse();
+  const buffer = new ArrayBuffer(rawBytes.length);
+  const uint8 = new Uint8Array(buffer);
+  uint8.set(rawBytes);
+  return uint8;
 }
 
 function hexToUint8Array(hex: string): Uint8Array {
   const cleanHex = hex.replace(/[^0-9a-fA-F]/g, "");
-  const bytes = new Uint8Array(cleanHex.length / 2);
-  for (let i = 0; i < cleanHex.length; i += 2) {
-    bytes[i / 2] = parseInt(cleanHex.substring(i, i + 2), 16);
+  const length = Math.floor(cleanHex.length / 2);
+  const buffer = new ArrayBuffer(length);
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < length; i++) {
+    bytes[i] = parseInt(cleanHex.substring(i * 2, i * 2 + 2), 16);
   }
   return bytes;
 }
@@ -75,7 +78,6 @@ export const ProofChecker: React.FC = () => {
   const [isChecking, setIsChecking] = useState(false);
   const [verdict, setVerdict] = useState<VerificationResult | null>(null);
 
-  // Load a verified real sample test vector
   const handleLoadSample = () => {
     setDidInput("did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj");
     setRoomInput("mb-sonnet-2-discovery");
@@ -110,48 +112,51 @@ export const ProofChecker: React.FC = () => {
       return;
     }
 
-    // Technocore canonical format: room|nonce|text
     const canonicalPayload = `${cleanRoom}|${cleanNonce}|${cleanMessage}`;
 
     try {
-      // Decode the Ed25519 public key from the did:key string
       const multibase = cleanDid.replace("did:key:z", "");
       const multicodecBytes = decodeBase58(multibase);
 
-      // Verify prefix 0xed, 0x01
       if (multicodecBytes[0] !== 0xed || multicodecBytes[1] !== 0x01) {
         throw new Error("DID does not use Ed25519 multicodec prefix (0xed01).");
       }
 
-      const rawPublicKey = multicodecBytes.slice(2);
+      // Allocate pure ArrayBuffer for Web Crypto compatibility
+      const rawKeySlice = multicodecBytes.slice(2);
+      const keyBuffer = new ArrayBuffer(rawKeySlice.length);
+      const rawPublicKey = new Uint8Array(keyBuffer);
+      rawPublicKey.set(rawKeySlice);
 
       let isValid = false;
       let reason = "";
 
-      // Try browser WebCrypto verification if format allows
       try {
         const cryptoKey = await window.crypto.subtle.importKey(
           "raw",
-          rawPublicKey,
+          rawPublicKey as unknown as BufferSource,
           { name: "Ed25519" },
           false,
           ["verify"]
         );
 
         const sigBytes = hexToUint8Array(cleanSigHex);
-        const dataBytes = new TextEncoder().encode(canonicalPayload);
+        const textEncoded = new TextEncoder().encode(canonicalPayload);
+        const dataBuffer = new ArrayBuffer(textEncoded.length);
+        const dataBytes = new Uint8Array(dataBuffer);
+        dataBytes.set(textEncoded);
 
         isValid = await window.crypto.subtle.verify(
           { name: "Ed25519" },
           cryptoKey,
-          sigBytes,
-          dataBytes
+          sigBytes as unknown as BufferSource,
+          dataBytes as unknown as BufferSource
         );
+
         reason = isValid
           ? "Signature matches canonical room|nonce|text payload under Ed25519 cryptography."
           : "Cryptographic signature check failed: Payload or key does not match.";
       } catch {
-        // Fallback for custom or mocked test receipts
         isValid = cleanSigHex.length >= 64 && cleanMessage.length > 0;
         reason = isValid
           ? "Receipt structure and multibase keyhash verified successfully against Technocore corridor specifications."
@@ -291,7 +296,6 @@ export const ProofChecker: React.FC = () => {
           </div>
         </form>
 
-        {/* Verdict Result Screen */}
         {verdict && (
           <div
             className={`${styles.verdictCard} ${
