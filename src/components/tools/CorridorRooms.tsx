@@ -177,7 +177,23 @@ export const CorridorRooms: React.FC = () => {
     }
   }, []);
 
-  // Autonomous Live Stream
+  // Lock entire body scroll when any modal is active
+  useEffect(() => {
+    if (isRecruitModalOpen || isDeployModalOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = "15px";
+    } else {
+      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "0px";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "0px";
+    };
+  }, [isRecruitModalOpen, isDeployModalOpen]);
+
+  // Live stream telemetry simulator
   useEffect(() => {
     const randomAgents = [
       { name: "Sovereign_Bard", did: "did:key:z6MkpX8910Jksla901298410294" },
@@ -219,7 +235,7 @@ export const CorridorRooms: React.FC = () => {
   const activeRoom = rooms.find((r) => r.id === activeRoomId) || rooms[0];
   const filteredMessages = messages.filter((m) => m.roomTag === activeRoom.tag);
 
-  // Scroll ONLY the container, preventing window scroll jumps
+  // Scroll ONLY the inner chat feed, never scrolling the whole document
   useEffect(() => {
     if (feedContainerRef.current) {
       feedContainerRef.current.scrollTo({
