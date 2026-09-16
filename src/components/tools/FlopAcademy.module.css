@@ -1,6 +1,6 @@
 .container {
   width: 100%;
-  max-width: 900px;
+  max-width: 800px;
   margin: 12px auto 80px auto;
   font-family: var(--font-mono, monospace);
   color: #f8fafc;
@@ -12,17 +12,15 @@
   border-left: 4px solid #00b4d8;
   border-radius: 18px;
   padding: 24px 28px;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
   box-shadow: 0 0 35px rgba(0, 180, 216, 0.12);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .bannerBadgeRow {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 8px;
 }
 
 .bannerBadge {
@@ -34,16 +32,12 @@
   border: 1px solid rgba(0, 180, 216, 0.35);
   text-transform: uppercase;
   font-weight: 800;
-  letter-spacing: 0.5px;
 }
 
 .bannerTitle {
   font-size: 26px;
   font-weight: 900;
   color: #ffffff;
-  display: flex;
-  align-items: center;
-  gap: 12px;
 }
 
 .bannerHighlight {
@@ -54,63 +48,32 @@
   font-size: 13px;
   color: #94a3b8;
   line-height: 1.6;
+  margin-top: 6px;
 }
 
-/* Agent Progression Header */
-.progressionCard {
-  background: #060c18;
-  border: 1px solid #16253b;
-  border-radius: 18px;
-  padding: 18px 22px;
-  margin-bottom: 28px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.agentInfoBox {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.currentTierPill {
-  background: rgba(0, 180, 216, 0.12);
-  border: 1px solid #00b4d8;
-  color: #00b4d8;
-  border-radius: 9999px;
-  padding: 4px 12px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1px;
-}
-
-/* Levels Grid */
+/* Tier Selector */
 .levelsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .levelCard {
   background: #040813;
   border: 1px solid #162238;
-  border-radius: 16px;
-  padding: 18px 16px;
+  border-radius: 14px;
+  padding: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   position: relative;
 }
 
 .levelCard:hover {
   border-color: rgba(0, 180, 216, 0.5);
-  transform: translateY(-2px);
 }
 
 .levelCardActive {
@@ -120,36 +83,64 @@
 }
 
 .levelCardLocked {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
-  filter: grayscale(0.8);
 }
 
 .badgeEarnedTag {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 9px;
+  top: 8px;
+  right: 8px;
+  font-size: 8px;
   font-weight: 800;
   color: #10b981;
   border: 1px solid #10b981;
   border-radius: 4px;
-  padding: 1px 6px;
+  padding: 1px 4px;
 }
 
-/* Quiz Active Workspace */
-.quizCard {
+/* 3D Flip Card Container */
+.flipPerspective {
+  perspective: 1000px;
+  width: 100%;
+}
+
+.flipCard {
   background: #040915;
   border: 1.5px solid #16253b;
   border-radius: 22px;
-  padding: 26px;
-  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8);
+  padding: 30px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: 420px;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+  transform-style: preserve-3d;
 }
 
-.questionTitle {
+.isFlipping {
+  transform: rotateY(90deg) scale(0.96);
+  opacity: 0.3;
+}
+
+/* Progress bar */
+.progressTrack {
+  width: 100%;
+  height: 6px;
+  background: #0d1527;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: #00b4d8;
+  box-shadow: 0 0 10px #00b4d8;
+  transition: width 0.3s ease;
+}
+
+.questionText {
   font-size: 16px;
   font-weight: 800;
   color: #ffffff;
@@ -186,42 +177,56 @@
 
 .optionBtnSelected {
   border-color: #00b4d8;
-  background: rgba(0, 180, 216, 0.12);
+  background: rgba(0, 180, 216, 0.15);
   color: #00b4d8;
   font-weight: 700;
 }
 
-.submitBtn {
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #16253b;
+}
+
+.actionBtn {
   background: #00b4d8;
   color: #020612;
   border: none;
   border-radius: 12px;
-  padding: 14px 28px;
-  font-size: 13px;
+  padding: 12px 24px;
+  font-size: 12px;
   font-weight: 900;
   font-family: inherit;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
   transition: all 0.2s;
-  box-shadow: 0 0 25px rgba(0, 180, 216, 0.35);
-  margin-top: 10px;
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.35);
 }
 
-.submitBtn:hover {
+.actionBtn:hover:not(:disabled) {
   background: #90e0ef;
-  box-shadow: 0 0 35px rgba(0, 180, 216, 0.55);
+  box-shadow: 0 0 30px rgba(0, 180, 216, 0.55);
 }
 
-.badgeModalAlert {
-  background: rgba(6, 32, 24, 0.95);
-  border: 1.5px solid #10b981;
-  border-radius: 16px;
-  padding: 20px;
+.actionBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Final Report Screen */
+.reportCard {
+  background: #040915;
+  border: 2px solid #16253b;
+  border-radius: 22px;
+  padding: 36px 28px;
+  text-align: center;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 0 30px rgba(16, 185, 129, 0.25);
 }

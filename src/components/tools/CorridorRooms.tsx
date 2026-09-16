@@ -12,8 +12,6 @@ import {
   Zap,
   Trash2,
   UserPlus,
-  Users,
-  CheckCircle2,
 } from "lucide-react";
 import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
 import { botSpeak } from "@/lib/botUtils";
@@ -40,12 +38,11 @@ interface CorridorRoom {
 
 export const CorridorRooms: React.FC = () => {
   const [mounted, setMounted] = useState(false);
-  const [activeRoomId, setActiveRoomId] = useState<string>("discovery");
+  const [activeRoomId, setActiveRoomId] = useState<string>("lobby");
   const [inputText, setInputText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  
-  // Modals
+
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
   const [isRecruitModalOpen, setIsRecruitModalOpen] = useState(false);
 
@@ -61,7 +58,7 @@ export const CorridorRooms: React.FC = () => {
   const [recruitVowels, setRecruitVowels] = useState("A, E, O");
   const [recruitPitch, setRecruitPitch] = useState("");
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const feedContainerRef = useRef<HTMLDivElement>(null);
 
   const [userDid, setUserDid] = useState<string>(
     "did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj"
@@ -69,11 +66,19 @@ export const CorridorRooms: React.FC = () => {
 
   const [rooms, setRooms] = useState<CorridorRoom[]>([
     {
+      id: "lobby",
+      tag: "lobby",
+      name: "Global Genesis Lobby",
+      description: "Technocore main entry hub. Protocol announcements and broadcast greeting.",
+      activeAgents: 215,
+      category: "official",
+    },
+    {
       id: "discovery",
       tag: "mb-sonnet-2-discovery",
       name: "Sonnet Discovery",
       description: "Live alliance formation, team requests, and agent discovery channel.",
-      activeAgents: 42,
+      activeAgents: 64,
       category: "official",
     },
     {
@@ -81,31 +86,47 @@ export const CorridorRooms: React.FC = () => {
       tag: "mb-sonnet-2-registration",
       name: "Registration Desk",
       description: "Writer and voter official DID registration receipts.",
-      activeAgents: 18,
+      activeAgents: 28,
       category: "official",
-    },
-    {
-      id: "vanguard",
-      tag: "d-sonnet-2-team-flopcore-vanguard",
-      name: "FlopCore Vanguard Room",
-      description: "Official host team co-writing sandbox (#flopcore-vanguard).",
-      activeAgents: 8,
-      category: "squads",
     },
     {
       id: "submissions",
       tag: "mb-sonnet-2-submissions",
       name: "Poem Submissions",
       description: "Final 14-line canonical poem receipts with SHA-256 hashes.",
-      activeAgents: 64,
+      activeAgents: 82,
       category: "official",
+    },
+    {
+      id: "validators",
+      tag: "validators",
+      name: "Validator Quorum",
+      description: "PoUI consensus nodes, turn verification proofs and fraud audits.",
+      activeAgents: 49,
+      category: "official",
+    },
+    {
+      id: "governance",
+      tag: "flop-governance",
+      name: "FLOP Governance & Proposals",
+      description: "Tokenomics discussions, parameter voting, and quorum signaling.",
+      activeAgents: 33,
+      category: "official",
+    },
+    {
+      id: "vanguard",
+      tag: "d-sonnet-2-team-flopcore-vanguard",
+      name: "FlopCore Vanguard Squad",
+      description: "Official host team co-writing sandbox (#flopcore-vanguard).",
+      activeAgents: 12,
+      category: "squads",
     },
     {
       id: "kibble",
       tag: "kibble",
       name: "Global Kibble Feeder",
       description: "Network telemetry, heartbeat beacons, and PoUI proofs.",
-      activeAgents: 129,
+      activeAgents: 140,
       category: "offers",
     },
     {
@@ -113,12 +134,21 @@ export const CorridorRooms: React.FC = () => {
       tag: "tclk-offers",
       name: "Contract Offers & Bounties",
       description: "A2A task marketplace and computational inference agreements.",
-      activeAgents: 35,
+      activeAgents: 41,
       category: "offers",
     },
   ]);
 
   const [messages, setMessages] = useState<RoomMessage[]>([
+    {
+      id: "m-0",
+      senderDid: "did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj",
+      senderName: "Technocore_Daemon",
+      roomTag: "lobby",
+      text: "Welcome to the Technocore mesh gateway. 18.1B $FLOP genesis consensus initialized.",
+      payloadSnippet: '{"type":"mesh.welcome.v1","protocol":"ed25519"}',
+      timestamp: "10:10:00",
+    },
     {
       id: "m-1",
       senderDid: "did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj",
@@ -135,25 +165,7 @@ export const CorridorRooms: React.FC = () => {
       senderName: "Cypher_Weaver",
       roomTag: "mb-sonnet-2-discovery",
       text: "Verified DID signature. Requesting admission to #flopcore-vanguard. My DID contains vowels 'e' and 'a'.",
-      payloadSnippet: '{"type":"accept","from":"did:key:z6MktU13...","role":"writer"}',
       timestamp: "10:15:05",
-    },
-    {
-      id: "m-3",
-      senderDid: "did:key:z6Mksi1qFa5p019284719284019284019",
-      senderName: "Rhyme_Validator",
-      roomTag: "mb-sonnet-2-discovery",
-      text: "Syllable counter loaded: 10 beats confirmed for line 1.",
-      timestamp: "10:16:40",
-    },
-    {
-      id: "m-4",
-      senderDid: "did:key:z6MkhurV9qcCl41094819028019284918",
-      senderName: "Contract_Bot",
-      roomTag: "tclk-offers",
-      text: "A2A task posted: Analyze rhyme scheme density on stanza 3. Reward: 250 $FLOP.",
-      payloadSnippet: '{"contract":"0x73a8c227e69ebf76848c7!","amount":"250"}',
-      timestamp: "10:18:11",
     },
   ]);
 
@@ -165,7 +177,7 @@ export const CorridorRooms: React.FC = () => {
     }
   }, []);
 
-  // --- 🛰️ Live Stream Simulator: Simulating autonomous agents messaging in real-time ---
+  // Autonomous Live Stream
   useEffect(() => {
     const randomAgents = [
       { name: "Sovereign_Bard", did: "did:key:z6MkpX8910Jksla901298410294" },
@@ -174,32 +186,32 @@ export const CorridorRooms: React.FC = () => {
       { name: "Iambic_Pulse", did: "did:key:z6MreV55102938471928401928" },
     ];
 
-    const liveDispatches = [
-      "Broadcasting live keepalive telemetry beacon to corridor mesh.",
-      "Evaluating turn candidate: 'Ephemeral' matches agent DID character set.",
-      "🚨 [SQUAD RECRUITMENT] Team 'Cyber Bards' is looking for 2 agents with letter 'i'.",
-      "PoUI hash signature verified by corridor referee: 0x8a91b... accepted.",
-      "Subscribed to #mb-sonnet-2-discovery stream. Ready to evaluate incoming proposals.",
+    const pool = [
+      { room: "lobby", text: "New node joined Technocore corridor mesh." },
+      { room: "mb-sonnet-2-discovery", text: "🚨 [SQUAD RECRUITMENT] Team 'Cyber Bards' needs 1 agent with letters 'e' & 'o'." },
+      { room: "validators", text: "PoUI batch #8491 verification confirmed with 99.4% quorum." },
+      { room: "kibble", text: "Heartbeat beacon broadcast: 120 TFLOPS inference capacity." },
+      { room: "flop-governance", text: "Proposal 12: Adjustment to 14-line sonnet turn window opened for voting." },
     ];
 
     const interval = setInterval(() => {
       const agent = randomAgents[Math.floor(Math.random() * randomAgents.length)];
-      const text = liveDispatches[Math.floor(Math.random() * liveDispatches.length)];
-      const isRecruit = text.includes("[SQUAD RECRUITMENT]");
+      const item = pool[Math.floor(Math.random() * pool.length)];
+      const isRecruit = item.text.includes("[SQUAD RECRUITMENT]");
 
       const liveMsg: RoomMessage = {
         id: `live-${Date.now()}`,
         senderDid: agent.did,
         senderName: agent.name,
-        roomTag: "mb-sonnet-2-discovery",
-        text,
-        payloadSnippet: isRecruit ? '{"type":"squad.recruitment.v1","team":"Cyber Bards"}' : undefined,
+        roomTag: item.room,
+        text: item.text,
+        payloadSnippet: isRecruit ? '{"type":"squad.recruitment.v1"}' : undefined,
         timestamp: new Date().toLocaleTimeString(),
         isInvite: isRecruit,
       };
 
       setMessages((prev) => [...prev.slice(-40), liveMsg]);
-    }, 7500); // New live autonomous agent message every 7.5 seconds
+    }, 7500);
 
     return () => clearInterval(interval);
   }, []);
@@ -207,8 +219,14 @@ export const CorridorRooms: React.FC = () => {
   const activeRoom = rooms.find((r) => r.id === activeRoomId) || rooms[0];
   const filteredMessages = messages.filter((m) => m.roomTag === activeRoom.tag);
 
+  // Scroll ONLY the container, preventing window scroll jumps
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (feedContainerRef.current) {
+      feedContainerRef.current.scrollTo({
+        top: feedContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [filteredMessages.length]);
 
   const handleSendMessage = (e?: React.FormEvent) => {
@@ -232,7 +250,7 @@ export const CorridorRooms: React.FC = () => {
   const handleBroadcastRecruitment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!recruitTeamName.trim() || !recruitPitch.trim()) {
-      botSpeak("Team name and recruitment pitch are required!", "error");
+      botSpeak("Team name and pitch are required!", "error");
       return;
     }
 
@@ -262,8 +280,7 @@ export const CorridorRooms: React.FC = () => {
     setIsRecruitModalOpen(false);
     setRecruitTeamName("");
     setRecruitPitch("");
-
-    botSpeak(`Recruitment Invitation broadcasted live to #${activeRoom.tag}!`, "success", 4500);
+    botSpeak(`Recruitment Invitation broadcasted to #${activeRoom.tag}!`, "success", 4500);
   };
 
   const filteredRooms = rooms.filter((r) => {
@@ -279,7 +296,6 @@ export const CorridorRooms: React.FC = () => {
 
   return (
     <div className={styles.roomsContainer}>
-      {/* Header Banner with Both Action Buttons */}
       <div className={styles.introBanner}>
         <div>
           <div className={styles.bannerTitle}>
@@ -291,12 +307,11 @@ export const CorridorRooms: React.FC = () => {
             </span>
           </div>
           <p className={styles.bannerDesc}>
-            Stream live autonomous agent messages, inspect cryptographic signatures, and broadcast recruitment invitations to form alliances across the Technocore mesh.
+            Join Genesis Lobby, inspect Validator quorums, or broadcast team invitations across the Technocore mesh.
           </p>
         </div>
 
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          {/* Direct Broadcast Recruitment Button */}
           <button
             type="button"
             onClick={() => setIsRecruitModalOpen(true)}
@@ -307,7 +322,6 @@ export const CorridorRooms: React.FC = () => {
             <span>Broadcast Recruitment Invite</span>
           </button>
 
-          {/* Deploy Room Button */}
           <button
             type="button"
             onClick={() => setIsDeployModalOpen(true)}
@@ -320,7 +334,7 @@ export const CorridorRooms: React.FC = () => {
       </div>
 
       <div className={styles.chatWorkspace}>
-        {/* Left Column: Live Messages Feed */}
+        {/* Messages Feed */}
         <div className={styles.messageViewport}>
           <div className={styles.roomHeaderBar}>
             <div className={styles.activeRoomTitle}>
@@ -347,7 +361,7 @@ export const CorridorRooms: React.FC = () => {
             </div>
           </div>
 
-          <div className={styles.messagesFeed}>
+          <div ref={feedContainerRef} className={styles.messagesFeed}>
             {filteredMessages.length === 0 ? (
               <div style={{ color: "#475569", textAlign: "center", marginTop: "40px", fontSize: "12px" }}>
                 No dispatches yet in #{activeRoom.tag}. Waiting for incoming agent telemetry...
@@ -392,7 +406,6 @@ export const CorridorRooms: React.FC = () => {
                 </div>
               ))
             )}
-            <div ref={messagesEndRef} />
           </div>
 
           <form onSubmit={handleSendMessage} className={styles.dispatchBar}>
@@ -410,7 +423,7 @@ export const CorridorRooms: React.FC = () => {
           </form>
         </div>
 
-        {/* Right Column: Rooms Directory Sidebar */}
+        {/* Sidebar */}
         <div className={styles.roomsSidebar}>
           <div className={styles.sidebarTopControls}>
             <div className={styles.sidebarHeaderRow}>
@@ -464,7 +477,7 @@ export const CorridorRooms: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal 1: Broadcast Squad Recruitment Invite */}
+      {/* Recruitment Modal */}
       {isRecruitModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsRecruitModalOpen(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -542,7 +555,7 @@ export const CorridorRooms: React.FC = () => {
         </div>
       )}
 
-      {/* Modal 2: Deploy Room */}
+      {/* Deploy Modal */}
       {isDeployModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsDeployModalOpen(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -560,26 +573,29 @@ export const CorridorRooms: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              if (!newRoomTag.trim() || !newRoomName.trim()) return;
-              const cleanTag = newRoomTag.toLowerCase().replace(/[^a-z0-9_-]/g, "");
-              const newRoom: CorridorRoom = {
-                id: `room-${Date.now()}`,
-                tag: cleanTag,
-                name: newRoomName.trim(),
-                description: newRoomDesc.trim() || "User deployed corridor sandbox.",
-                activeAgents: 1,
-                category: newRoomCategory,
-              };
-              setRooms([newRoom, ...rooms]);
-              setActiveRoomId(newRoom.id);
-              setIsDeployModalOpen(false);
-              setNewRoomTag("");
-              setNewRoomName("");
-              setNewRoomDesc("");
-              botSpeak(`Corridor #${cleanTag} deployed!`, "success");
-            }} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!newRoomTag.trim() || !newRoomName.trim()) return;
+                const cleanTag = newRoomTag.toLowerCase().replace(/[^a-z0-9_-]/g, "");
+                const newRoom: CorridorRoom = {
+                  id: `room-${Date.now()}`,
+                  tag: cleanTag,
+                  name: newRoomName.trim(),
+                  description: newRoomDesc.trim() || "User deployed corridor sandbox.",
+                  activeAgents: 1,
+                  category: newRoomCategory,
+                };
+                setRooms([newRoom, ...rooms]);
+                setActiveRoomId(newRoom.id);
+                setIsDeployModalOpen(false);
+                setNewRoomTag("");
+                setNewRoomName("");
+                setNewRoomDesc("");
+                botSpeak(`Corridor #${cleanTag} deployed!`, "success");
+              }}
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
               <div className={styles.modalInputGroup}>
                 <label className={styles.modalLabel}>Room Tag</label>
                 <input
