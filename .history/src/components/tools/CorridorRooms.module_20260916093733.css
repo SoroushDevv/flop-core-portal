@@ -1,0 +1,536 @@
+.roomsContainer {
+  width: 100%;
+  margin: 16px auto 40px auto;
+  font-family: var(--font-mono, monospace);
+  color: #f8fafc;
+  display: block;
+  position: relative;
+  z-index: 20;
+}
+
+.introBanner {
+  background: rgba(11, 15, 25, 0.95);
+  border: 1px solid #162238;
+  border-left: 4px solid #00b4d8;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 0 30px rgba(0, 180, 216, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.bannerTitle {
+  font-size: 19px;
+  font-weight: 800;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bannerBadge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 180, 216, 0.15);
+  color: #00b4d8;
+  border: 1px solid rgba(0, 180, 216, 0.3);
+  text-transform: uppercase;
+}
+
+.bannerDesc {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+.newRoomBtn {
+  background: #00b4d8;
+  color: #020612;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.3);
+  white-space: nowrap;
+}
+
+.newRoomBtn:hover {
+  background: #90e0ef;
+  box-shadow: 0 0 30px rgba(0, 180, 216, 0.5);
+}
+
+.chatWorkspace {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  background: #060b14;
+  border: 1px solid #162238;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 180, 216, 0.12);
+  min-height: 600px;
+}
+
+@media (min-width: 860px) {
+  .chatWorkspace {
+    grid-template-columns: 1fr 340px;
+  }
+}
+
+/* Left Column: Message Viewport */
+.messageViewport {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #03060f;
+  border-right: 1px solid #162238;
+  min-height: 520px;
+}
+
+.roomHeaderBar {
+  padding: 14px 20px;
+  background: #070c18;
+  border-bottom: 1px solid #162238;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.activeRoomTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: #00b4d8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roomMetrics {
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  display: inline-block;
+}
+
+.headerActionIcon {
+  background: transparent;
+  border: 1px solid #16253b;
+  color: #94a3b8;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.headerActionIcon:hover {
+  color: #00b4d8;
+  border-color: #00b4d8;
+}
+
+/* Quick Payloads Bar */
+.quickPayloadsBar {
+  padding: 8px 16px;
+  background: #050914;
+  border-bottom: 1px solid #141f33;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.quickPayloadTitle {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.quickPayloadChip {
+  background: rgba(0, 180, 216, 0.08);
+  border: 1px solid rgba(0, 180, 216, 0.3);
+  color: #90e0ef;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.quickPayloadChip:hover {
+  background: #00b4d8;
+  color: #020612;
+}
+
+.messagesFeed {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.messageRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.agentAvatarSlot {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #081020;
+  border: 1px solid #16253b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.bubbleBody {
+  flex: 1;
+  background: #070e1c;
+  border: 1px solid #16253b;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.bubbleTopMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.agentHandle {
+  font-size: 12px;
+  font-weight: 800;
+  color: #00b4d8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.agentDidHash {
+  font-size: 9px;
+  color: #64748b;
+  font-weight: normal;
+}
+
+.timeTag {
+  font-size: 10px;
+  color: #475569;
+}
+
+.messageContent {
+  font-size: 12px;
+  color: #e2e8f0;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.payloadBox {
+  margin-top: 8px;
+  background: #020409;
+  border: 1px solid #141f33;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #38bdf8;
+  font-family: inherit;
+  white-space: pre-wrap;
+}
+
+/* Dispatch Bar */
+.dispatchBar {
+  padding: 14px 18px;
+  background: #070c18;
+  border-top: 1px solid #162238;
+  display: flex;
+  gap: 10px;
+}
+
+.messageInput {
+  flex: 1;
+  background: #03060f;
+  border: 1px solid #16253b;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #f1f5f9;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.messageInput:focus {
+  border-color: #00b4d8;
+}
+
+.sendBtn {
+  background: #00b4d8;
+  color: #020612;
+  border: none;
+  border-radius: 10px;
+  padding: 0 18px;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.sendBtn:hover {
+  background: #90e0ef;
+  box-shadow: 0 0 18px rgba(0, 180, 216, 0.45);
+}
+
+/* Right Column: Rooms Directory Sidebar */
+.roomsSidebar {
+  background: #060b14;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarTopControls {
+  padding: 14px 16px;
+  background: #070c18;
+  border-bottom: 1px solid #162238;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebarHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.searchInput {
+  background: #03060f;
+  border: 1px solid #16253b;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #f1f5f9;
+  font-family: inherit;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: #00b4d8;
+}
+
+.categoryPills {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+}
+
+.categoryPill {
+  background: transparent;
+  border: 1px solid #16253b;
+  color: #94a3b8;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.categoryPillActive {
+  background: rgba(0, 180, 216, 0.15);
+  border-color: #00b4d8;
+  color: #00b4d8;
+}
+
+.roomsList {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  max-height: 520px;
+}
+
+.roomCard {
+  background: #030712;
+  border: 1px solid #162238;
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.roomCard:hover {
+  border-color: rgba(0, 180, 216, 0.4);
+  background: #07101f;
+}
+
+.roomCardActive {
+  border-color: #00b4d8;
+  background: rgba(0, 180, 216, 0.12);
+  box-shadow: 0 0 15px rgba(0, 180, 216, 0.2);
+}
+
+.roomCardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.roomCardTag {
+  font-size: 12px;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.roomCardActive .roomCardTag {
+  color: #00b4d8;
+}
+
+.roomAudienceBadge {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #0f1c2e;
+  color: #94a3b8;
+  border: 1px solid #1a2c47;
+}
+
+.roomCardDesc {
+  font-size: 10px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* Modal: Create New Room */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(2, 6, 18, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 2147483647; /* بالاترین مقدار ممکن برای z-index */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.modalCard {
+  position: relative;
+  z-index: 2147483647;
+  width: 100%;
+  max-width: 520px;
+  background: #060e1d;
+  border: 2px solid #00b4d8;
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 0 60px rgba(0, 180, 216, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #16253b;
+  padding-bottom: 10px;
+}
+
+.modalTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modalInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modalLabel {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.modalInput {
+  background: #03060f;
+  border: 1px solid #16253b;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+}
+
+.modalInput:focus {
+  border-color: #00b4d8;
+}

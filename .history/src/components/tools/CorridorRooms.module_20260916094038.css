@@ -1,0 +1,474 @@
+.roomsContainer {
+  width: 100%;
+  max-width: 1150px;
+  margin: 12px auto 80px auto;
+  font-family: var(--font-mono, monospace);
+  color: #f8fafc;
+}
+
+.introBanner {
+  background: rgba(11, 15, 25, 0.95);
+  border: 1px solid #162238;
+  border-left: 4px solid #00b4d8;
+  border-radius: 18px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+  box-shadow: 0 0 35px rgba(0, 180, 216, 0.12);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.bannerTitle {
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bannerBadge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  display: inline-flex;
+  align-items: center;
+  font-weight: 800;
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.bannerDesc {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+  line-height: 1.6;
+  max-width: 680px;
+}
+
+.newRoomBtn {
+  background: #00b4d8;
+  color: #020612;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.35);
+}
+
+.newRoomBtn:hover {
+  background: #90e0ef;
+  box-shadow: 0 0 30px rgba(0, 180, 216, 0.55);
+}
+
+/* Chat Layout Split View */
+.chatWorkspace {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 900px) {
+  .chatWorkspace {
+    grid-template-columns: 1fr 340px;
+  }
+}
+
+/* Left Message Viewport */
+.messageViewport {
+  background: #040813;
+  border: 1.5px solid #16253b;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+
+.roomHeaderBar {
+  background: #070e1c;
+  border-bottom: 1px solid #16253b;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.activeRoomTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.roomMetrics {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.headerActionIcon {
+  background: transparent;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  color: #64748b;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.headerActionIcon:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.messagesFeed {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #020409;
+}
+
+.messageRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.agentAvatarSlot {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.bubbleBody {
+  background: #07101f;
+  border: 1px solid #16253b;
+  border-radius: 14px;
+  padding: 12px 16px;
+  max-width: 82%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bubbleTopMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.agentHandle {
+  font-size: 12px;
+  font-weight: 800;
+  color: #00b4d8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.agentDidHash {
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.timeTag {
+  font-size: 10px;
+  color: #475569;
+}
+
+.messageContent {
+  font-size: 13px;
+  color: #e2e8f0;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.payloadBox {
+  background: #02050c;
+  border: 1px solid #16253b;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #38bdf8;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.dispatchBar {
+  background: #070e1c;
+  border-top: 1px solid #16253b;
+  padding: 14px 18px;
+  display: flex;
+  gap: 10px;
+}
+
+.messageInput {
+  flex: 1;
+  background: #02050c;
+  border: 1px solid #16253b;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #ffffff;
+  outline: none;
+  font-family: inherit;
+}
+
+.messageInput:focus {
+  border-color: #00b4d8;
+}
+
+.sendBtn {
+  background: #00b4d8;
+  color: #020612;
+  border: none;
+  border-radius: 10px;
+  padding: 0 20px;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.sendBtn:hover {
+  background: #90e0ef;
+}
+
+/* Right Rooms Directory Sidebar */
+.roomsSidebar {
+  background: #040813;
+  border: 1.5px solid #16253b;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+  overflow: hidden;
+}
+
+.sidebarTopControls {
+  background: #070e1c;
+  border-bottom: 1px solid #16253b;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebarHeaderRow {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.searchInput {
+  background: #02050c;
+  border: 1px solid #16253b;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #ffffff;
+  outline: none;
+  font-family: inherit;
+}
+
+.categoryPills {
+  display: flex;
+  gap: 6px;
+}
+
+.categoryPill {
+  background: #0a1322;
+  border: 1px solid #16253b;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #64748b;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.categoryPillActive {
+  background: rgba(0, 180, 216, 0.15);
+  border-color: #00b4d8;
+  color: #00b4d8;
+}
+
+.roomsList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.roomCard {
+  background: #060c18;
+  border: 1px solid #142033;
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.roomCard:hover {
+  border-color: rgba(0, 180, 216, 0.4);
+}
+
+.roomCardActive {
+  background: rgba(0, 180, 216, 0.1);
+  border-color: #00b4d8;
+}
+
+.roomCardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.roomCardTag {
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.roomAudienceBadge {
+  font-size: 10px;
+  color: #64748b;
+}
+
+.roomCardDesc {
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+/* Modals Overlay with Highest Z-Index & Full Window Cover */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(2, 6, 18, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.modalCard {
+  position: relative;
+  z-index: 2147483647;
+  width: 100%;
+  max-width: 520px;
+  background: #060e1d;
+  border: 2px solid #00b4d8;
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 0 60px rgba(0, 180, 216, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #16253b;
+  padding-bottom: 12px;
+}
+
+.modalTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modalInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modalLabel {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.modalInput {
+  background: #02050c;
+  border: 1px solid #16253b;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+}
+
+.modalInput:focus {
+  border-color: #00b4d8;
+}

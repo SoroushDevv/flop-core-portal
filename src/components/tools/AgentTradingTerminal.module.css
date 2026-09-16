@@ -1,0 +1,361 @@
+.container {
+  width: 100%;
+  max-width: 1150px;
+  margin: 12px auto 80px auto;
+  font-family: var(--font-mono, monospace);
+  color: #f8fafc;
+}
+
+.banner {
+  background: rgba(11, 15, 25, 0.95);
+  border: 1px solid #162238;
+  border-left: 4px solid #10b981;
+  border-radius: 18px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+  box-shadow: 0 0 35px rgba(16, 185, 129, 0.12);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.bannerTitle {
+  font-size: 22px;
+  font-weight: 900;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bannerBadge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  display: inline-flex;
+  align-items: center;
+  font-weight: 800;
+}
+
+.bannerDesc {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+  line-height: 1.6;
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.dispatchBtn {
+  background: #10b981;
+  color: #020612;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+}
+
+.dispatchBtn:hover {
+  background: #34d399;
+}
+
+/* Trading Statistics Grid */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.statCard {
+  background: #040813;
+  border: 1px solid #16253b;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.statValue {
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+/* Signals Feed Layout */
+.workspaceGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 900px) {
+  .workspaceGrid {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.feedCard {
+  background: #040813;
+  border: 1.5px solid #16253b;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8);
+}
+
+.feedHeader {
+  background: #070e1c;
+  border-bottom: 1px solid #16253b;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.feedTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.signalsList {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 620px;
+  overflow-y: auto;
+}
+
+.signalItem {
+  background: #060c18;
+  border: 1px solid #16253b;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s;
+}
+
+.signalItem:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.signalTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pairBadge {
+  font-size: 13px;
+  font-weight: 900;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionLong {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid #10b981;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.actionShort {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.signalDetails {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  background: #02050c;
+  border: 1px solid #142033;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.detailCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detailLabel {
+  font-size: 9px;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.detailVal {
+  font-size: 12px;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.proofBox {
+  font-size: 10px;
+  color: #00b4d8;
+  word-break: break-all;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.copyTradeBtn {
+  background: #0c1c2e;
+  border: 1px solid #00b4d8;
+  color: #00b4d8;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.copyTradeBtn:hover {
+  background: #00b4d8;
+  color: #020612;
+}
+
+/* Right Column: Execution Sandbox */
+.executionPanel {
+  background: #040813;
+  border: 1.5px solid #16253b;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.execTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  border-bottom: 1px solid #16253b;
+  padding-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Modal Overlay */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 18, 0.92);
+  backdrop-filter: blur(12px);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 500px;
+  background: #060e1d;
+  border: 2px solid #10b981;
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 0 60px rgba(16, 185, 129, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #16253b;
+  padding-bottom: 12px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.inputField {
+  background: #02050c;
+  border: 1px solid #16253b;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+}
+
+.inputField:focus {
+  border-color: #10b981;
+}
