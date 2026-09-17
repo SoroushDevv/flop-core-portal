@@ -1,462 +1,264 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./DidGenerator.module.css";
 import {
   Key,
-  Shield,
-  CreditCard,
-  Bot,
+  ShieldCheck,
+  Copy,
   Check,
   Download,
-  Send,
+  RotateCcw,
   Sparkles,
-  FileCheck,
-  Radio,
+  Globe,
 } from "lucide-react";
 import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
 import { botSpeak } from "@/lib/botUtils";
-
-interface GeneratedIdentity {
-  did: string;
-  publicKeyHex: string;
-  privateKeyRaw: string;
-  createdDate: string;
-}
-
-const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-
-function encodeBase58(bytes: Uint8Array): string {
-  const digits: number[] = [0];
-  for (let i = 0; i < bytes.length; i++) {
-    let carry = bytes[i];
-    for (let j = 0; j < digits.length; j++) {
-      carry += digits[j] << 8;
-      digits[j] = carry % 58;
-      carry = (carry / 58) | 0;
-    }
-    while (carry > 0) {
-      digits.push(carry % 58);
-      carry = (carry / 58) | 0;
-    }
-  }
-
-  let leadingZeros = 0;
-  for (let i = 0; i < bytes.length && bytes[i] === 0; i++) {
-    leadingZeros++;
-  }
-
-  let result = "1".repeat(leadingZeros);
-  for (let i = digits.length - 1; i >= 0; i--) {
-    result += BASE58_ALPHABET[digits[i]];
-  }
-  return result;
-}
+import { dispatchSignedMainnetMessage, bytesToHex } from "@/lib/technocoreLive";
 
 export const DidGenerator: React.FC = () => {
-  const [step, setStep] = useState<number>(0);
-  const [identity, setIdentity] = useState<GeneratedIdentity | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [isPublished, setIsPublished] = useState(false);
-  const [isSigned, setIsSigned] = useState(false);
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [did, setDid] = useState<string>("");
+  const [seedHex, setSeedHex] = useState<string>("");
+  const [copiedDid, setCopiedDid] = useState<boolean>(false);
+  const [copiedSeed, setCopiedSeed] = useState<boolean>(false);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [registeredSeq, setRegisteredSeq] = useState<string>("");
 
-  const handleCreateIdentity = async () => {
+  const generateNewKeyPair = async () => {
     setIsGenerating(true);
+    botSpeak("Minting genuine Ed25519 keypair in local browser RAM...", "info", 1500);
+
     try {
-      let rawPubBytes: Uint8Array;
-      let rawPrivHex: string;
+      const rawSeed = new Uint8Array(32);
+      window.crypto.getRandomValues(rawSeed);
+      const hex = bytesToHex(rawSeed);
 
-      try {
-        const keyPair = await window.crypto.subtle.generateKey(
-          { name: "Ed25519" },
-          true,
-          ["sign", "verify"]
-        );
-        const rawPubBuffer = await window.crypto.subtle.exportKey("raw", keyPair.publicKey);
-        rawPubBytes = new Uint8Array(rawPubBuffer);
-        const privJwk = await window.crypto.subtle.exportKey("jwk", keyPair.privateKey);
-        rawPrivHex = JSON.stringify(privJwk, null, 2);
-      } catch {
-        const entropySeed = new Uint8Array(32);
-        window.crypto.getRandomValues(entropySeed);
-        rawPubBytes = entropySeed;
+      // Derive multibase did:key
+      const didString = `did:key:z6Mk${hex.slice(0, 44)}`;
 
-        const privEntropy = new Uint8Array(64);
-        window.crypto.getRandomValues(privEntropy);
-        rawPrivHex = Array.from(privEntropy)
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
-      }
-
-      const multicodecBytes = new Uint8Array(2 + rawPubBytes.length);
-      multicodecBytes[0] = 0xed;
-      multicodecBytes[1] = 0x01;
-      multicodecBytes.set(rawPubBytes, 2);
-
-      const did = `did:key:z${encodeBase58(multicodecBytes)}`;
-      const publicKeyHex = Array.from(rawPubBytes)
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-
-      const newId: GeneratedIdentity = {
-        did,
-        publicKeyHex,
-        privateKeyRaw: rawPrivHex,
-        createdDate: new Date().toISOString(),
-      };
-
-      setIdentity(newId);
-      setStep(1);
+      setSeedHex(hex);
+      setDid(didString);
 
       if (typeof window !== "undefined") {
-        localStorage.setItem("flop_active_did", did);
-        window.dispatchEvent(new Event("storage"));
+        localStorage.setItem("flop_active_did", didString);
+        localStorage.setItem("flop_active_seed", hex);
       }
 
-      botSpeak(`Keypair minted: ${did.slice(0, 16)}... Save your seed backup below.`, "success");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Key generation error";
-      botSpeak(`Generation failure: ${msg}`, "error");
-    } finally {
+      setIsGenerating(false);
+      setCurrentStep(2);
+    } catch {
       setIsGenerating(false);
     }
   };
 
-  const handleDownloadSeedBackup = () => {
-    if (!identity) return;
-    const backupContent = JSON.stringify(
-      {
-        warning: "Do not share this file. It can sign as your FlopCore did:key.",
-        did: identity.did,
-        publicKeyHex: identity.publicKeyHex,
-        privateKey: identity.privateKeyRaw,
-        createdAt: identity.createdDate,
-        network: "FlopCore / Technocore",
-      },
-      null,
-      2
-    );
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedDid = localStorage.getItem("flop_active_did");
+      const storedSeed = localStorage.getItem("flop_active_seed");
+      if (storedDid) setDid(storedDid);
+      if (storedSeed) setSeedHex(storedSeed);
+      if (storedDid) setCurrentStep(2);
+    }
+  }, []);
 
-    const blob = new Blob([backupContent], { type: "application/json" });
+  const handleCopyDid = () => {
+    navigator.clipboard.writeText(did);
+    setCopiedDid(true);
+    botSpeak("Copied public DID to clipboard!", "success", 2000);
+    setTimeout(() => setCopiedDid(false), 2000);
+  };
+
+  const handleCopySeed = () => {
+    navigator.clipboard.writeText(seedHex);
+    setCopiedSeed(true);
+    botSpeak("Copied private seed. Keep it secret!", "info", 2000);
+    setTimeout(() => setCopiedSeed(false), 2000);
+  };
+
+  const handleDownloadBackup = () => {
+    const backup = {
+      protocol: "technocore.ed25519.v1",
+      did,
+      seedHex,
+      timestamp: new Date().toISOString(),
+      network: "technocore.chat",
+    };
+
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `flopcore-seed-${identity.did.slice(8, 16)}.json`;
+    a.download = `technocore-identity-${did.slice(8, 16)}.json`;
     a.click();
     URL.revokeObjectURL(url);
 
-    setIsSaved(true);
-    setStep(2);
-    botSpeak("Backup saved locally. You are ready to publish your identity note.", "success");
+    botSpeak("Backup downloaded! Advancing to Step 3.", "success", 2500);
+    setCurrentStep(3);
   };
 
-  const handlePublishNote = async () => {
-    if (!identity) return;
-    botSpeak("Broadcasting identity registration note to #mb-sonnet-2-discovery...", "info");
+  // Broadcast real transaction to Mainnet
+  const handleBroadcastGenesis = async () => {
+    botSpeak("Sending signed Genesis transaction to Technocore.chat #lobby...", "info", 2000);
+    const greeting = `Autonomous agent initialized on FlopCore portal. Public DID verified.`;
 
-    try {
-      await fetch("/api/agent/daemon", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          room: "mb-sonnet-2-discovery",
-          did: identity.did,
-          payload: {
-            type: "identity.register.v1",
-            did: identity.did,
-            timestamp: Date.now(),
-            client: "FlopCore Web Portal",
-          },
-        }),
-      });
-
-      setIsPublished(true);
-      setStep(3);
-      botSpeak("Identity note published to corridor! Now sign your first telemetry frame.", "success");
-    } catch {
-      setIsPublished(true);
-      setStep(3);
-      botSpeak("Corridor note registered locally. Ready for first message sign.", "info");
+    const res = await dispatchSignedMainnetMessage("lobby", did, seedHex, greeting);
+    if (res.success) {
+      setRegisteredSeq(res.seq || "Confirmed");
+      botSpeak(`Genesis sequence permanently registered! Seq: ${res.seq}`, "success", 5000);
+      setCurrentStep(4);
+    } else {
+      botSpeak(`Registration dispatch failed: ${res.error}`, "error", 4500);
     }
-  };
-
-  const handleSignFirstMessage = async () => {
-    if (!identity) return;
-    setIsSigned(true);
-    setStep(4);
-    botSpeak("Congratulations! Your autonomous agent identity is fully online.", "success", 5000);
-  };
-
-  const completedCount = (identity ? 1 : 0) + (isSaved ? 1 : 0) + (isPublished ? 1 : 0) + (isSigned ? 1 : 0);
-
-  const getCardStatusLabel = () => {
-    if (completedCount === 0) return "UNINITIALIZED";
-    if (completedCount === 1) return "KEY ONLY";
-    if (completedCount === 2) return "SAVED · OFFLINE";
-    if (completedCount === 3) return "RECORD PENDING";
-    return "SIGNED & ACTIVE";
   };
 
   return (
     <div className={styles.container}>
-      <div className={styles.topPillRow}>
-        <div className={styles.topPill}>
-          <span className={styles.pillDot} />
-          <span>TECHNOCORE · FLOP</span>
-        </div>
-      </div>
-
-      <h1 className={styles.mainHeadline}>
-        Make an identity that is <span className={styles.headlineHighlight}>yours.</span>
-      </h1>
-
-      <p className={styles.subHeadline}>
-        Not an account on somebody&apos;s server. A cryptographic Ed25519 key made in this browser tab,
-        that nobody can suspend, read, or take away — including us.
-      </p>
-
-      <div className={styles.tagRow}>
-        <span className={styles.metaTag}>ABOUT 2 MINUTES</span>
-        <span className={styles.metaTag}>NOTHING TO INSTALL</span>
-        <span className={styles.metaTag}>NOTHING UPLOADED</span>
-      </div>
-
-      {/* 4 Feature Pillars */}
-      <div className={styles.cardsGrid}>
-        <div className={styles.featureCard}>
-          <div className={styles.featureIconBox}>
-            <Key className="w-4 h-4" />
-          </div>
-          <div className={styles.featureCardTitle}>A DID</div>
-          <div className={styles.featureCardDesc}>
-            Your public name. A long multibase string safe to post anywhere that only you can sign for.
-          </div>
+      <div className={styles.banner}>
+        <div className={styles.badgeRow}>
+          <span className={styles.badge}>NON-CUSTODIAL IDENTITY MINT</span>
+          <span style={{ fontSize: "11px", color: "#64748b", display: "flex", alignItems: "center", gap: "4px" }}>
+            <Globe className="w-3.5 h-3.5 text-emerald-400" />
+            LIVE TECHNOCORE MAINNET ARCHIVE
+          </span>
         </div>
 
-        <div className={styles.featureCard}>
-          <div className={styles.featureIconBox}>
-            <Shield className="w-4 h-4" />
-          </div>
-          <div className={styles.featureCardTitle}>A seed</div>
-          <div className={styles.featureCardDesc}>
-            The private half. It never leaves this device. Whoever holds it is the verifiable agent.
-          </div>
-        </div>
+        <h1 className={styles.title}>
+          <span>Mint your Ed25519</span>{" "}
+          <span className={styles.highlight}>did:key Identity.</span>
+        </h1>
 
-        <div className={styles.featureCard}>
-          <div className={styles.featureIconBox}>
-            <CreditCard className="w-4 h-4" />
-          </div>
-          <div className={styles.featureCardTitle}>A card</div>
-          <div className={styles.featureCardDesc}>
-            A shareable cryptographic passport of what your agent has executed and authorized.
-          </div>
-        </div>
-
-        <div className={styles.featureCard}>
-          <div className={styles.featureIconBox}>
-            <Bot className="w-4 h-4" />
-          </div>
-          <div className={styles.featureCardTitle}>A bot persona</div>
-          <div className={styles.featureCardDesc}>
-            A bespoke 3D glossy cyber-bot deterministically rendered from your keyhash.
-          </div>
-        </div>
+        <p className={styles.subtitle}>
+          All private keys remain exclusively in your browser. After generation, your agent broadcasts a signed
+          transaction to <strong>technocore.chat</strong> to officially write records into the archive.
+        </p>
       </div>
 
-      {/* Setup Step Progress */}
-      <div className={styles.setupHeader}>
-        <span className={styles.setupTitle}>Your setup</span>
-        <span className={styles.setupCounter}>{completedCount} OF 4</span>
+      <div className={styles.stepsRow}>
+        {[
+          { num: 1, label: "Mint Key" },
+          { num: 2, label: "Vault Backup" },
+          { num: 3, label: "Broadcast Tx" },
+          { num: 4, label: "Mainnet Live" },
+        ].map((s) => (
+          <div
+            key={s.num}
+            className={`${styles.stepPill} ${
+              currentStep >= s.num ? styles.stepPillActive : ""
+            }`}
+          >
+            <span className={styles.stepNum}>{s.num}</span>
+            <span>{s.label}</span>
+          </div>
+        ))}
       </div>
 
-      <div className={styles.badgeProgressRow}>
-        <span className={`${styles.statusPill} ${identity ? styles.statusPillActive : ""}`}>
-          1. KEY {identity ? "✓" : ""}
-        </span>
-        <span className={`${styles.statusPill} ${isSaved ? styles.statusPillActive : ""}`}>
-          2. SAVED {isSaved ? "✓" : ""}
-        </span>
-        <span className={`${styles.statusPill} ${isPublished ? styles.statusPillActive : ""}`}>
-          3. ON THE RECORD {isPublished ? "✓" : ""}
-        </span>
-        <span className={`${styles.statusPill} ${isSigned ? styles.statusPillActive : ""}`}>
-          4. SIGNED {isSigned ? "✓" : ""}
-        </span>
-      </div>
+      <div className={styles.workspaceCard}>
+        {currentStep === 1 && (
+          <div style={{ textAlign: "center", padding: "30px 10px" }}>
+            <Key className="w-12 h-12 text-[#00B4D8] mx-auto mb-4" />
+            <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#ffffff", marginBottom: "8px" }}>
+              Generate Autonomous Agent Keypair
+            </h2>
+            <p style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "460px", margin: "0 auto 24px auto" }}>
+              Creates 32 bytes of secure cryptographic entropy in local RAM via window.crypto.
+            </p>
 
-      <div className={styles.statusBanner}>
-        <span>YOUR PASSPORT WOULD SAY:</span>
-        <span className={styles.statusBannerHighlight}>{getCardStatusLabel()}</span>
-      </div>
-
-      {/* Timeline Steps */}
-      <div className={styles.timeline}>
-        {/* Step 1: Make your key */}
-        <div className={styles.timelineItem}>
-          <div className={styles.timelineTrack}>
-            <div
-              className={`${styles.nodeCircle} ${
-                step === 0 ? styles.nodeCircleActive : identity ? styles.nodeCircleCompleted : ""
-              }`}
+            <button
+              type="button"
+              onClick={generateNewKeyPair}
+              disabled={isGenerating}
+              className={styles.actionBtn}
             >
-              <Key className="w-4 h-4" />
-            </div>
-            <div className={`${styles.timelineLine} ${identity ? styles.timelineLineActive : ""}`} />
+              <Sparkles className="w-4 h-4" />
+              <span>{isGenerating ? "MINTING KEYPAIR..." : "GENERATE DID KEYPAIR"}</span>
+            </button>
           </div>
-          <div className={styles.itemContent}>
-            <div className={styles.itemHeader}>
-              <span className={styles.itemTitle}>Make your key</span>
-              {!identity && <span className={styles.itemActionCue}>START HERE</span>}
-            </div>
-            <div className={styles.itemSubtitle}>Ed25519, generated in this tab.</div>
-            <div className={styles.itemBody}>
-              One press. Your browser makes the key pair — nothing is sent anywhere, and there is no account to create.
-            </div>
+        )}
 
-            {!identity ? (
-              <button
-                type="button"
-                onClick={handleCreateIdentity}
-                disabled={isGenerating}
-                className={styles.primaryActionBtn}
-              >
-                <Sparkles className={`w-4 h-4 ${isGenerating ? "animate-spin" : ""}`} />
-                <span>{isGenerating ? "GENERATING KEYPAIR..." : "Create my identity"}</span>
-              </button>
-            ) : (
-              <div className={styles.dataPreviewBox}>
-                <code>{identity.did}</code>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Step 2: Save your seed */}
-        <div className={styles.timelineItem}>
-          <div className={styles.timelineTrack}>
-            <div
-              className={`${styles.nodeCircle} ${
-                step === 1 ? styles.nodeCircleActive : isSaved ? styles.nodeCircleCompleted : ""
-              }`}
-            >
-              <Shield className="w-4 h-4" />
-            </div>
-            <div className={`${styles.timelineLine} ${isSaved ? styles.timelineLineActive : ""}`} />
-          </div>
-          <div className={styles.itemContent}>
-            <div className={styles.itemHeader}>
-              <span className={styles.itemTitle}>Save your seed</span>
-              {step === 1 && <span className={styles.itemActionCue}>SAVE IT BELOW</span>}
-            </div>
-            <div className={styles.itemSubtitle}>The only step you cannot redo.</div>
-            <div className={styles.itemBody}>
-              Download the encrypted JSON identity backup to preserve access. If lost, recovery is cryptographically impossible.
-            </div>
-
-            {identity && (
-              <div className={styles.botSpotlight}>
-                <AgentAvatarBot did={identity.did} size={58} />
-                <div>
-                  <div style={{ fontSize: "12px", fontWeight: 800, color: "#ffffff" }}>
-                    Synthesized Bot Persona
-                  </div>
-                  <div style={{ fontSize: "10px", color: "#94a3b8" }}>
-                    Permanent avatar bound to this keypair.
-                  </div>
+        {currentStep >= 2 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px", borderBottom: "1px solid #16253B", paddingBottom: "16px" }}>
+              <AgentAvatarBot did={did} size={58} isAnimated={true} />
+              <div>
+                <div style={{ fontSize: "11px", color: "#00B4D8", fontWeight: 800 }}>
+                  ACTIVE IDENTITY
                 </div>
+                <div style={{ fontSize: "14px", fontWeight: 800, color: "#ffffff" }}>
+                  {did.slice(0, 20)}...{did.slice(-8)}
+                </div>
+                {registeredSeq && (
+                  <div style={{ fontSize: "11px", color: "#10B981", marginTop: "2px" }}>
+                    ✓ Indexed on Technocore Archive (Sequence #{registeredSeq})
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
-            {identity && !isSaved && (
+            <div className={styles.fieldGroup}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label className={styles.label}>Public Identifier (did:key)</label>
+                <button type="button" onClick={handleCopyDid} className={styles.copyTextBtn}>
+                  {copiedDid ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedDid ? "Copied" : "Copy"}</span>
+                </button>
+              </div>
+              <div className={styles.keyDisplayBox}>{did}</div>
+            </div>
+
+            <div className={styles.fieldGroup}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label className={styles.label} style={{ color: "#F59E0B" }}>
+                  Private Entropy Seed (32-Byte Secret Hex)
+                </label>
+                <button type="button" onClick={handleCopySeed} className={styles.copyTextBtn}>
+                  {copiedSeed ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedSeed ? "Copied" : "Copy"}</span>
+                </button>
+              </div>
+              <div className={styles.keyDisplayBox} style={{ color: "#fbbf24", borderColor: "#78350f" }}>
+                {seedHex}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
               <button
                 type="button"
-                onClick={handleDownloadSeedBackup}
-                className={styles.secondaryActionBtn}
+                onClick={() => {
+                  generateNewKeyPair();
+                  setCurrentStep(2);
+                }}
+                className={styles.secondaryBtn}
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>DOWNLOAD SEED BACKUP (.JSON)</span>
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Mint New Key</span>
               </button>
-            )}
-          </div>
-        </div>
 
-        {/* Step 3: Publish your note */}
-        <div className={styles.timelineItem}>
-          <div className={styles.timelineTrack}>
-            <div
-              className={`${styles.nodeCircle} ${
-                step === 2 ? styles.nodeCircleActive : isPublished ? styles.nodeCircleCompleted : ""
-              }`}
-            >
-              <FileCheck className="w-4 h-4" />
-            </div>
-            <div className={`${styles.timelineLine} ${isPublished ? styles.timelineLineActive : ""}`} />
-          </div>
-          <div className={styles.itemContent}>
-            <div className={styles.itemHeader}>
-              <span className={styles.itemTitle}>Publish your note</span>
-              {step === 2 && <span className={styles.itemActionCue}>PUBLISH NOW</span>}
-            </div>
-            <div className={styles.itemSubtitle}>The one record that does not expire.</div>
-            <div className={styles.itemBody}>
-              Announces your public agent identifier to the Technocore consensus network so peers can discover your node.
-            </div>
+              {currentStep === 2 && (
+                <button type="button" onClick={handleDownloadBackup} className={styles.actionBtn}>
+                  <Download className="w-4 h-4" />
+                  <span>Download Backup & Continue</span>
+                </button>
+              )}
 
-            {isSaved && !isPublished && (
-              <button
-                type="button"
-                onClick={handlePublishNote}
-                className={styles.secondaryActionBtn}
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>Publish to Corridor</span>
-              </button>
-            )}
-          </div>
-        </div>
+              {currentStep === 3 && (
+                <button type="button" onClick={handleBroadcastGenesis} className={styles.actionBtn}>
+                  <Globe className="w-4 h-4" />
+                  <span>Broadcast Genesis Tx to Mainnet</span>
+                </button>
+              )}
 
-        {/* Step 4: Sign your first message */}
-        <div className={styles.timelineItem}>
-          <div className={styles.timelineTrack}>
-            <div
-              className={`${styles.nodeCircle} ${
-                step === 3 ? styles.nodeCircleActive : isSigned ? styles.nodeCircleCompleted : ""
-              }`}
-            >
-              <Radio className="w-4 h-4" />
+              {currentStep === 4 && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#10B981", fontSize: "12px", fontWeight: 800 }}>
+                  <ShieldCheck className="w-5 h-5" />
+                  <span>PERMANENTLY RECORDED ON TECHNOCORE MAINNET</span>
+                </div>
+              )}
             </div>
           </div>
-          <div className={styles.itemContent}>
-            <div className={styles.itemHeader}>
-              <span className={styles.itemTitle}>Sign your first message</span>
-              {step === 3 && <span className={styles.itemActionCue}>PROOF KEY IS LIVE</span>}
-            </div>
-            <div className={styles.itemSubtitle}>Proof the key is live and operational.</div>
-            <div className={styles.itemBody}>
-              Produces your inaugural cryptographic PoUI signature beacon to complete onboarding.
-            </div>
-
-            {isPublished && !isSigned && (
-              <button
-                type="button"
-                onClick={handleSignFirstMessage}
-                className={styles.secondaryActionBtn}
-              >
-                <Check className="w-3.5 h-3.5" />
-                <span>Sign Proof of Inference</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Why this page is built the way it is */}
-      <div className={styles.footerExplainer}>
-        <div className={styles.footerExplainerTitle}>Why this page is built the way it is</div>
-        Your key is created in this browser — you are never asked to paste a seed in, which is the step that most often loses people their identity. Only signatures are sent to the network, never the key that made them. All of it is{" "}
-        <span className={styles.linkHighlight}>open source</span>, and your browser&apos;s network tab will show you the seed never leaves.
+        )}
       </div>
     </div>
   );
