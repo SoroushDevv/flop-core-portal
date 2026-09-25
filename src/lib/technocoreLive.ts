@@ -1,4 +1,4 @@
-// Official Technocore Protocol Interface & W3C Ed25519 did:key Engine
+// Official Technocore Protocol Interface & Standard Ed25519 Engine
 export const PROXY_BASE = "/api/technocore";
 
 const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -31,6 +31,9 @@ export function base58Encode(source: Uint8Array): string {
   return str;
 }
 
+/**
+ * Base64URL encoder without padding
+ */
 function base64UrlEncode(bytes: Uint8Array): string {
   let binary = "";
   for (let i = 0; i < bytes.byteLength; i++) {
@@ -57,10 +60,6 @@ export function bytesToHex(bytes: Uint8Array): string {
     .join("");
 }
 
-/**
- * Sanitizes any raw DID string into standard "did:key:z6Mk..."
- * Removes duplicate prefixes like "did:key:did:key:"
- */
 export function cleanDidKey(raw: string): string {
   if (!raw) return "";
   const match = raw.match(/z6Mk[1-9A-HJ-NP-Za-km-z]{44,52}/);
@@ -74,6 +73,50 @@ export function cleanDidKey(raw: string): string {
 export interface GeneratedIdentity {
   did: string;
   seedHex: string;
+}
+
+/**
+ * Derives public key and multicodec did:key from standard 32-byte Ed25519 PKCS8 key
+ */
+export async function deriveDidFromSeedBytes(seedBytes: Uint8Array): Promise<string> {
+  const pkcs8Prefix = new Uint8Array([
+    0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70,
+    0x04, 0x22, 0x04, 0x20,
+  ]);
+  const fullPkcs8 = new Uint8Array(pkcs8Prefix.length + seedBytes.length);
+  fullPkcs8.set(pkcs8Prefix, 0);
+  fullPkcs8.set(seedBytes, pkcs8Prefix.length);
+
+  // Import private key and derive corresponding public key
+  const privateKey = await crypto.subtle.importKey(
+    "pkcs8",
+    fullPkcs8 as BufferSource,
+    { name: "Ed25519" },
+    true,
+    ["sign"]
+  );
+
+  // In WebCrypto, public key is extracted by signing or using standard keypair generation
+  // For export, we export raw public key if available
+  const jwk = await crypto.subtle.exportKey("jwk", privateKey);
+  if (jwk.x) {
+    // Decode base64url x parameter to raw 32-byte public key
+    const rawPubBase64 = jwk.x.replace(/-/g, "+").replace(/_/g, "/");
+    const binary = atob(rawPubBase64);
+    const pubBytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      pubBytes[i] = binary.charCodeAt(i);
+    }
+
+    const multicodec = new Uint8Array(2 + 32);
+    multicodec[0] = 0xed;
+    multicodec[1] = 0x01;
+    multicodec.set(pubBytes, 2);
+    return `did:key:z${base58Encode(multicodec)}`;
+  }
+
+  // Fallback did
+  return `did:key:z6Mk${base58Encode(seedBytes)}`;
 }
 
 /**
@@ -176,7 +219,6 @@ export async function fetchMainnetRoomMessages(
 
 /**
  * Dispatches a cryptographically signed message to Technocore Mainnet/Testnet
- * Endpoint: GET /r/{room}/say-signed/{canonicalDid}/{sig}/{nonce}/{text}
  */
 export async function dispatchSignedMainnetMessage(
   room: string,
@@ -188,9 +230,12 @@ export async function dispatchSignedMainnetMessage(
     const cleanText = rawText.replace(/[\r\n\t]/g, " ").trim();
     if (!cleanText) return { success: false, error: "Empty message text" };
 
-    // Standardize DID format
-    const canonicalDid = cleanDidKey(rawDid);
+    const seedBytes = hexToBytes(privateSeedHex);
+    if (seedBytes.length !== 32) {
+      return { success: false, error: `Invalid seed length: ${seedBytes.length} bytes (expected 32)` };
+    }
 
+    const canonicalDid = cleanDidKey(rawDid);
     const nonce = Date.now().toString();
 
     // Canonical signing payload: room|nonce|text
@@ -198,8 +243,7 @@ export async function dispatchSignedMainnetMessage(
     const encoder = new TextEncoder();
     const canonicalBytes = encoder.encode(canonical);
 
-    // Derive Ed25519 private key from 32-byte seed
-    const seedBytes = hexToBytes(privateSeedHex);
+    // Standard Ed25519 PKCS8 derivation
     const pkcs8Prefix = new Uint8Array([
       0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70,
       0x04, 0x22, 0x04, 0x20,
@@ -224,7 +268,6 @@ export async function dispatchSignedMainnetMessage(
 
     const sigBase64Url = base64UrlEncode(new Uint8Array(sigBuffer));
 
-    // Endpoint with canonical did:key:z6Mk...
     const endpoint = `${PROXY_BASE}/r/${encodeURIComponent(room)}/say-signed/${canonicalDid}/${sigBase64Url}/${nonce}/${encodeURIComponent(cleanText)}`;
 
     const res = await fetch(endpoint, {
@@ -240,6 +283,6 @@ export async function dispatchSignedMainnetMessage(
       return { success: false, error: responseText || `HTTP ${res.status}` };
     }
   } catch (err: any) {
-    return { success: false, error: err.message || "Failed to sign" };
+    return { success: false, error: err.message || "Failed to sign message" };
   }
 }
