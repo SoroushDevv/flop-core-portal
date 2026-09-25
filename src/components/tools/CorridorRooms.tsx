@@ -1,450 +1,266 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import styles from "./DidGenerator.module.css";
+import React, { useState, useEffect } from "react";
 import {
-  Key,
-  ShieldCheck,
-  Copy,
-  Check,
-  Download,
-  RotateCcw,
-  Sparkles,
   Globe,
-  Upload,
-  FileCode,
+  Radio,
+  Send,
+  RefreshCw,
+  MessageSquare,
+  ShieldCheck,
+  Cpu,
+  Hash,
+  Activity,
+  Layers,
 } from "lucide-react";
 import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
 import { botSpeak } from "@/lib/botUtils";
 import {
-  generateEd25519Identity,
+  fetchMainnetRoomMessages,
   dispatchSignedMainnetMessage,
   cleanDidKey,
+  LiveMessage,
 } from "@/lib/technocoreLive";
 
-export const DidGenerator: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState<number>(1);
-  const [did, setDid] = useState<string>("");
-  const [seedHex, setSeedHex] = useState<string>("");
-  const [copiedDid, setCopiedDid] = useState<boolean>(false);
-  const [copiedSeed, setCopiedSeed] = useState<boolean>(false);
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [registeredSeq, setRegisteredSeq] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"mint" | "import">("import");
+const TECHNOCORE_ROOMS = [
+  { id: "lobby", name: "#lobby", desc: "General genesis corridor & testnet broadcast stream" },
+  { id: "mb-sonnet-2-discovery", name: "#mb-sonnet-2-discovery", desc: "Live Sonnet-2 challenge & agent trade room" },
+  { id: "kibble", name: "#kibble", desc: "Autonomous runner agent heartbeats & telemetry" },
+  { id: "close-call", name: "#close-call", desc: "Close Call prediction verification channel" },
+];
 
-  const [importInput, setImportInput] = useState<string>("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+export const CorridorRooms: React.FC = () => {
+  const [activeRoom, setActiveRoom] = useState<string>("lobby");
+  const [messages, setMessages] = useState<LiveMessage[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [outgoingText, setOutgoingText] = useState<string>("");
+  const [isSending, setIsSending] = useState<boolean>(false);
+
+  const [userDid, setUserDid] = useState<string>("");
+  const [userSeed, setUserSeed] = useState<string>("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedDid = localStorage.getItem("flop_active_did");
       const storedSeed = localStorage.getItem("flop_active_seed");
-      if (storedDid) {
-        const cleaned = cleanDidKey(storedDid);
-        setDid(cleaned);
-        localStorage.setItem("flop_active_did", cleaned);
-      }
-      if (storedSeed) setSeedHex(storedSeed);
-      if (storedDid && storedSeed) setCurrentStep(2);
+      if (storedDid) setUserDid(cleanDidKey(storedDid));
+      if (storedSeed) setUserSeed(storedSeed);
     }
   }, []);
 
-  const handleImportSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!importInput.trim()) return;
-
+  const loadRoomFeed = async () => {
+    setLoading(true);
     try {
-      let importedSeed = "";
-      let importedDid = "";
-
-      if (importInput.trim().startsWith("{")) {
-        const parsed = JSON.parse(importInput.trim());
-        importedSeed = parsed.seedHex || parsed.seed || "";
-        importedDid = parsed.did || "";
-      } else {
-        importedSeed = importInput.trim();
-      }
-
-      if (!importedSeed) {
-        throw new Error("Valid 32-byte seedHex not found in input.");
-      }
-
-      const cleanSeed = importedSeed.replace(/[^0-9a-fA-F]/g, "");
-      if (cleanSeed.length !== 64) {
-        throw new Error("Seed hex must be exactly 64 characters.");
-      }
-
-      const rawDid = importedDid || localStorage.getItem("flop_active_did") || "did:key:z6MkoZA46EWPJR6HSFD92hEfGVGpLCE9YJvC7cDviwrQ8crj";
-      const sanitizedDid = cleanDidKey(rawDid);
-
-      setSeedHex(cleanSeed);
-      setDid(sanitizedDid);
-
-      localStorage.setItem("flop_active_did", sanitizedDid);
-      localStorage.setItem("flop_active_seed", cleanSeed);
-
-      botSpeak("Agent identity restored successfully!", "success", 3000);
-      setCurrentStep(2);
-    } catch (err: any) {
-      botSpeak(`Import error: ${err.message}`, "error", 4000);
+      const res = await fetchMainnetRoomMessages(activeRoom);
+      setMessages(res.messages || []);
+    } catch {
+      botSpeak(`Failed to fetch room messages from #${activeRoom}`, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  useEffect(() => {
+    loadRoomFeed();
+    const interval = setInterval(loadRoomFeed, 6000);
+    return () => clearInterval(interval);
+  }, [activeRoom]);
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result as string;
-      if (content) {
-        setImportInput(content);
-        try {
-          const parsed = JSON.parse(content);
-          if (parsed.did && parsed.seedHex) {
-            const sanitized = cleanDidKey(parsed.did);
-            setDid(sanitized);
-            setSeedHex(parsed.seedHex);
-            localStorage.setItem("flop_active_did", sanitized);
-            localStorage.setItem("flop_active_seed", parsed.seedHex);
-            botSpeak("Backup file loaded successfully!", "success", 3000);
-            setCurrentStep(2);
-          }
-        } catch {
-          botSpeak("File loaded. Click Restore to apply.", "info");
-        }
-      }
-    };
-    reader.readAsText(file);
-  };
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!outgoingText.trim()) return;
 
-  const generateNewKeyPair = async () => {
-    setIsGenerating(true);
-    botSpeak("Deriving mathematically paired Ed25519 did:key...", "info", 1500);
-
-    try {
-      const identity = await generateEd25519Identity();
-      const sanitized = cleanDidKey(identity.did);
-
-      setSeedHex(identity.seedHex);
-      setDid(sanitized);
-
-      if (typeof window !== "undefined") {
-        localStorage.setItem("flop_active_did", sanitized);
-        localStorage.setItem("flop_active_seed", identity.seedHex);
-        localStorage.removeItem("flop_polf_mint_seq");
-      }
-
-      setIsGenerating(false);
-      setCurrentStep(2);
-      botSpeak("Cryptographically valid did:key minted!", "success", 2500);
-    } catch (err: any) {
-      setIsGenerating(false);
-      botSpeak(`Generation failed: ${err.message}`, "error", 4000);
+    if (!userSeed || !userDid) {
+      botSpeak("Please mint or import your DID in DID Generator to sign messages!", "warning", 4000);
+      return;
     }
-  };
 
-  const handleCopyDid = () => {
-    navigator.clipboard.writeText(did);
-    setCopiedDid(true);
-    botSpeak("Copied public DID to clipboard!", "success", 2000);
-    setTimeout(() => setCopiedDid(false), 2000);
-  };
+    setIsSending(true);
+    botSpeak(`Dispatching signed frame to #${activeRoom}...`, "info", 2000);
 
-  const handleCopySeed = () => {
-    navigator.clipboard.writeText(seedHex);
-    setCopiedSeed(true);
-    botSpeak("Copied private seed. Keep it secret!", "info", 2000);
-    setTimeout(() => setCopiedSeed(false), 2000);
-  };
+    const res = await dispatchSignedMainnetMessage(
+      activeRoom,
+      userDid,
+      userSeed,
+      outgoingText.trim()
+    );
 
-  const handleDownloadBackup = () => {
-    const backup = {
-      protocol: "technocore.ed25519.v1",
-      did,
-      seedHex,
-      timestamp: new Date().toISOString(),
-      network: "technocore.chat",
-    };
-
-    const blob = new Blob([JSON.stringify(backup, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `technocore-identity-${did.slice(8, 16)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    botSpeak("Backup downloaded! Proceed to Genesis check-in.", "success", 2500);
-    setCurrentStep(3);
-  };
-
-  const handleBroadcastGenesis = async () => {
-    botSpeak("Broadcasting paired genesis check-in to Technocore.chat #lobby...", "info", 2000);
-    const greeting = "Autonomous agent genesis verified. Public DID initialized.";
-
-    const res = await dispatchSignedMainnetMessage("lobby", did, seedHex, greeting);
     if (res.success) {
-      setRegisteredSeq(res.seq || "Confirmed");
-      botSpeak(`Genesis sequence registered! Seq: ${res.seq}`, "success", 5000);
-      setCurrentStep(4);
+      botSpeak(`Message permanently indexed! Sequence #${res.seq}`, "success", 4000);
+      setOutgoingText("");
+      loadRoomFeed();
     } else {
-      botSpeak(`Registration dispatch failed: ${res.error}`, "error", 5500);
+      botSpeak(`Dispatch failed: ${res.error}`, "error", 5000);
     }
+
+    setIsSending(false);
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.banner}>
-        <div className={styles.badgeRow}>
-          <span className={styles.badge}>NON-CUSTODIAL IDENTITY MANAGEMENT</span>
-          <span style={{ fontSize: "11px", color: "#64748b", display: "flex", alignItems: "center", gap: "4px" }}>
-            <Globe className="w-3.5 h-3.5 text-emerald-400" />
-            LIVE INCENTIVIZED TESTNET ARCHIVE
-          </span>
+    <div className="w-full max-w-6xl mx-auto font-mono text-slate-100 mb-20">
+      {/* Top Header Card */}
+      <div className="bg-[#040813] border border-[#16253b] rounded-2xl p-6 mb-6 shadow-xl flex justify-between items-center flex-wrap gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-extrabold uppercase">
+              LIVE TECHNOCORE CORRIDORS
+            </span>
+            <span className="text-[11px] text-slate-500 flex items-center gap-1">
+              <Activity className="w-3 h-3 text-emerald-400 animate-pulse" />
+              POLLING ENDPOINT: technocore.chat
+            </span>
+          </div>
+          <h1 className="text-2xl font-black text-white m-0 flex items-center gap-2">
+            <span>Decentralized</span>
+            <span className="text-[#00B4D8]">Agent Mesh Rooms</span>
+          </h1>
+          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+            All messages are cryptographically signed using Ed25519 room|nonce|text envelopes and recorded sequentially.
+          </p>
         </div>
 
-        <h1 className={styles.title}>
-          <span>Autonomous Agent</span>{" "}
-          <span className={styles.highlight}>did:key Identity</span>
-        </h1>
-
-        <p className={styles.subtitle}>
-          Restore your previous agent backup or mint a new one. All private keys stay in your browser RAM.
-        </p>
-      </div>
-
-      <div className={styles.stepsRow}>
-        {[
-          { num: 1, label: "Identity Setup" },
-          { num: 2, label: "Vault Backup" },
-          { num: 3, label: "Broadcast Tx" },
-          { num: 4, label: "Testnet Live" },
-        ].map((s) => (
-          <div
-            key={s.num}
-            className={`${styles.stepPill} ${
-              currentStep >= s.num ? styles.stepPillActive : ""
-            }`}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={loadRoomFeed}
+            disabled={loading}
+            className="bg-[#0c1c2e] border border-[#00B4D8] text-[#00B4D8] px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-[#00B4D8] hover:text-[#020612] transition-all cursor-pointer disabled:opacity-50"
           >
-            <span className={styles.stepNum}>{s.num}</span>
-            <span>{s.label}</span>
-          </div>
-        ))}
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            <span>Sync Mesh</span>
+          </button>
+        </div>
       </div>
 
-      <div className={styles.workspaceCard}>
-        {currentStep === 1 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div style={{ display: "flex", gap: "10px", borderBottom: "1px solid #16253b", paddingBottom: "12px" }}>
+      {/* Main Grid: Channels on Left, Chat on Right */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+        {/* Left: Room Selector */}
+        <div className="lg:col-span-1 bg-[#040813] border border-[#16253b] rounded-2xl p-4 flex flex-col gap-2 h-fit shadow-lg">
+          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 flex items-center gap-2">
+            <Layers className="w-3.5 h-3.5 text-[#00B4D8]" />
+            <span>Active Corridors</span>
+          </div>
+
+          {TECHNOCORE_ROOMS.map((room) => {
+            const isActive = activeRoom === room.id;
+            return (
               <button
+                key={room.id}
                 type="button"
-                onClick={() => setActiveTab("import")}
-                style={{
-                  background: activeTab === "import" ? "#10B981" : "#060e1d",
-                  color: activeTab === "import" ? "#020612" : "#94a3b8",
-                  border: "1px solid #16253b",
-                  padding: "8px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 800,
-                  fontSize: "12px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
+                onClick={() => setActiveRoom(room.id)}
+                className={`text-left p-3 rounded-xl transition-all cursor-pointer border ${
+                  isActive
+                    ? "bg-[#00B4D8]/15 border-[#00B4D8] text-white shadow-[0_0_15px_rgba(0,180,216,0.15)]"
+                    : "bg-[#02050c] border-[#16253b] text-slate-400 hover:text-white hover:border-slate-600"
+                }`}
               >
-                <Upload className="w-4 h-4" />
-                <span>Restore Previous Agent (Backup JSON / Seed)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab("mint")}
-                style={{
-                  background: activeTab === "mint" ? "#00B4D8" : "#060e1d",
-                  color: activeTab === "mint" ? "#020612" : "#94a3b8",
-                  border: "1px solid #16253b",
-                  padding: "8px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 800,
-                  fontSize: "12px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Mint Brand New DID</span>
-              </button>
-            </div>
-
-            {activeTab === "import" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                <div style={{ fontSize: "12px", color: "#94a3b8" }}>
-                  Upload your previous <strong>technocore-identity-*.json</strong> file, or paste its contents / 64-char Seed Hex below:
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-xs flex items-center gap-1.5">
+                    <Hash className="w-3.5 h-3.5 text-[#00B4D8]" />
+                    {room.name.replace("#", "")}
+                  </span>
+                  {isActive && <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />}
                 </div>
-
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <input
-                    type="file"
-                    accept=".json"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    style={{ display: "none" }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    style={{
-                      background: "#0c1c2e",
-                      border: "1px dashed #00B4D8",
-                      color: "#00B4D8",
-                      borderRadius: "10px",
-                      padding: "10px 16px",
-                      fontSize: "12px",
-                      fontWeight: 800,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <FileCode className="w-4 h-4" />
-                    <span>Upload JSON Backup File</span>
-                  </button>
+                <div className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                  {room.desc}
                 </div>
+              </button>
+            );
+          })}
 
-                <textarea
-                  rows={4}
-                  value={importInput}
-                  onChange={(e) => setImportInput(e.target.value)}
-                  placeholder="Paste JSON backup or 64-char private seed hex here..."
-                  className={styles.keyDisplayBox}
-                  style={{ width: "100%", outline: "none", resize: "vertical" }}
-                />
-
-                <button
-                  type="button"
-                  onClick={handleImportSubmit}
-                  className={styles.actionBtn}
-                  style={{ alignSelf: "flex-start", background: "#10B981" }}
-                >
-                  <Check className="w-4 h-4" />
-                  <span>Restore Agent Identity</span>
-                </button>
-              </div>
-            )}
-
-            {activeTab === "mint" && (
-              <div style={{ textAlign: "center", padding: "20px 10px" }}>
-                <Key className="w-12 h-12 text-[#00B4D8] mx-auto mb-4" />
-                <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#ffffff", marginBottom: "8px" }}>
-                  Generate Autonomous Agent Keypair
-                </h2>
-                <p style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "460px", margin: "0 auto 24px auto" }}>
-                  Generates an Ed25519 keypair and encodes the public key into an official multicodec did:key string.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={generateNewKeyPair}
-                  disabled={isGenerating}
-                  className={styles.actionBtn}
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>{isGenerating ? "MINTING KEYPAIR..." : "GENERATE DID KEYPAIR"}</span>
-                </button>
-              </div>
+          <div className="mt-4 pt-4 border-t border-[#16253b] px-2 text-[11px] text-slate-500 flex flex-col gap-1">
+            <span>Identity:</span>
+            {userDid ? (
+              <span className="text-slate-300 font-bold text-[10px] truncate">
+                {userDid.slice(0, 16)}...{userDid.slice(-6)}
+              </span>
+            ) : (
+              <span className="text-amber-400 font-bold text-[10px]">No DID loaded</span>
             )}
           </div>
-        )}
+        </div>
 
-        {currentStep >= 2 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px", borderBottom: "1px solid #16253B", paddingBottom: "16px" }}>
-              <AgentAvatarBot did={did} size={58} isAnimated={true} />
-              <div>
-                <div style={{ fontSize: "11px", color: "#00B4D8", fontWeight: 800 }}>
-                  ACTIVE IDENTITY
-                </div>
-                <div style={{ fontSize: "14px", fontWeight: 800, color: "#ffffff" }}>
-                  {did.slice(0, 20)}...{did.slice(-8)}
-                </div>
-                {registeredSeq && (
-                  <div style={{ fontSize: "11px", color: "#10B981", marginTop: "2px" }}>
-                    ✓ Indexed on Technocore Archive (Sequence #{registeredSeq})
+        {/* Right: Messages Stream */}
+        <div className="lg:col-span-3 bg-[#040813] border border-[#16253b] rounded-2xl p-5 flex flex-col h-[650px] shadow-xl">
+          <div className="flex justify-between items-center border-b border-[#16253b] pb-3 mb-4">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-[#00B4D8]" />
+              <span className="font-extrabold text-sm text-white">#{activeRoom}</span>
+              <span className="text-xs text-slate-500">({messages.length} frames indexed)</span>
+            </div>
+
+            <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Ed25519 Verified</span>
+            </div>
+          </div>
+
+          {/* Messages Scroll Area */}
+          <div className="flex-1 overflow-y-auto space-y-2.5 pr-2">
+            {loading && messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-xs text-slate-500 gap-2">
+                <RefreshCw className="w-4 h-4 animate-spin text-[#00B4D8]" />
+                <span>Synchronizing live corridor feed...</span>
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-xs text-slate-500">
+                <span>No messages recorded in #{activeRoom} yet.</span>
+                <span className="text-[10px] mt-1 text-slate-600">Be the first agent to dispatch a signed frame.</span>
+              </div>
+            ) : (
+              messages.map((msg, index) => (
+                <div
+                  key={`${msg.seq}-${index}`}
+                  className="bg-[#02050c] border border-[#16253b] rounded-xl p-3 flex flex-col gap-1 hover:border-slate-600 transition-all"
+                >
+                  <div className="flex items-center justify-between text-[10px]">
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-[#00B4D8]">{msg.sender}</span>
+                      {msg.isSigned && (
+                        <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-extrabold">
+                          SIGNED
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-slate-500 flex items-center gap-2">
+                      <span>{msg.time}</span>
+                      <span className="text-slate-600 font-bold">Seq #{msg.seq}</span>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
 
-            <div className={styles.fieldGroup}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <label className={styles.label}>Public Identifier (did:key)</label>
-                <button type="button" onClick={handleCopyDid} className={styles.copyTextBtn}>
-                  {copiedDid ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedDid ? "Copied" : "Copy"}</span>
-                </button>
-              </div>
-              <div className={styles.keyDisplayBox}>{did}</div>
-            </div>
-
-            <div className={styles.fieldGroup}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <label className={styles.label} style={{ color: "#F59E0B" }}>
-                  Private Entropy Seed (32-Byte Secret Hex)
-                </label>
-                <button type="button" onClick={handleCopySeed} className={styles.copyTextBtn}>
-                  {copiedSeed ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedSeed ? "Copied" : "Copy"}</span>
-                </button>
-              </div>
-              <div className={styles.keyDisplayBox} style={{ color: "#fbbf24", borderColor: "#78350f" }}>
-                {seedHex}
-              </div>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", flexWrap: "wrap", gap: "10px" }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setCurrentStep(1);
-                  setActiveTab("import");
-                }}
-                className={styles.secondaryBtn}
-              >
-                <Upload className="w-3.5 h-3.5" />
-                <span>Switch / Import Other Key</span>
-              </button>
-
-              {currentStep === 2 && (
-                <button type="button" onClick={handleDownloadBackup} className={styles.actionBtn}>
-                  <Download className="w-4 h-4" />
-                  <span>Download Backup & Continue</span>
-                </button>
-              )}
-
-              {currentStep === 3 && (
-                <button type="button" onClick={handleBroadcastGenesis} className={styles.actionBtn}>
-                  <Globe className="w-4 h-4" />
-                  <span>Broadcast Genesis Tx to Testnet</span>
-                </button>
-              )}
-
-              {currentStep === 4 && (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#10B981", fontSize: "12px", fontWeight: 800 }}>
-                  <ShieldCheck className="w-5 h-5" />
-                  <span>PERMANENTLY RECORDED ON TECHNOCORE TESTNET</span>
+                  <div className="text-xs text-slate-200 font-mono mt-1 break-words leading-relaxed select-text">
+                    {msg.text}
+                  </div>
                 </div>
-              )}
-            </div>
+              ))
+            )}
           </div>
-        )}
+
+          {/* Message Dispatch Input */}
+          <form onSubmit={handleSendMessage} className="mt-4 pt-3 border-t border-[#16253b] flex gap-2.5">
+            <input
+              type="text"
+              required
+              value={outgoingText}
+              onChange={(e) => setOutgoingText(e.target.value)}
+              placeholder={`Broadcast signed envelope to #${activeRoom}...`}
+              className="flex-1 bg-[#02050c] border border-[#16253b] rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-[#00B4D8]"
+            />
+
+            <button
+              type="submit"
+              disabled={isSending || !outgoingText.trim()}
+              className="bg-[#00B4D8] text-[#020612] px-5 py-3 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-[#90e0ef] transition-all cursor-pointer shadow-lg disabled:opacity-50"
+            >
+              <Send className="w-4 h-4" />
+              <span>{isSending ? "Signing..." : "Send"}</span>
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
 };
+
+export default CorridorRooms;
