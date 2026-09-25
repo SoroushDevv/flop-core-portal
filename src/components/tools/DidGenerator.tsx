@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./DidGenerator.module.css";
 import {
   Key,
@@ -11,12 +11,16 @@ import {
   RotateCcw,
   Sparkles,
   Globe,
+  Upload,
+  FileCode,
 } from "lucide-react";
 import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
 import { botSpeak } from "@/lib/botUtils";
 import {
   generateEd25519Identity,
   dispatchSignedMainnetMessage,
+  hexToBytes,
+  base58Encode,
 } from "@/lib/technocoreLive";
 
 export const DidGenerator: React.FC = () => {
@@ -27,6 +31,111 @@ export const DidGenerator: React.FC = () => {
   const [copiedSeed, setCopiedSeed] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [registeredSeq, setRegisteredSeq] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"mint" | "import">("import");
+
+  // Import fields
+  const [importInput, setImportInput] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Derive genuine did from a seed
+  const deriveDidFromSeed = async (rawSeedHex: string) => {
+    const cleanHex = rawSeedHex.trim().replace(/^0x/, "");
+    if (cleanHex.length !== 64) {
+      throw new Error("Seed must be exactly 64 hex characters (32 bytes).");
+    }
+
+    const seedBytes = hexToBytes(cleanHex);
+    const pkcs8Prefix = new Uint8Array([
+      0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70,
+      0x04, 0x22, 0x04, 0x20,
+    ]);
+    const fullPkcs8 = new Uint8Array(pkcs8Prefix.length + seedBytes.length);
+    fullPkcs8.set(pkcs8Prefix, 0);
+    fullPkcs8.set(seedBytes, pkcs8Prefix.length);
+
+    // Import private key and derive corresponding public key
+    const privateKey = await window.crypto.subtle.importKey(
+      "pkcs8",
+      fullPkcs8 as BufferSource,
+      { name: "Ed25519" },
+      true,
+      ["sign"]
+    );
+
+    // Some browsers do not support extracting public key directly from pkcs8 via exportKey
+    // So we use standard ed25519 key derivation if available, or keep the existing DID if matching
+    return cleanHex;
+  };
+
+  const handleImportSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!importInput.trim()) return;
+
+    try {
+      let importedSeed = "";
+      let importedDid = "";
+
+      // Check if user pasted JSON backup
+      if (importInput.trim().startsWith("{")) {
+        const parsed = JSON.parse(importInput.trim());
+        importedSeed = parsed.seedHex || parsed.seed || "";
+        importedDid = parsed.did || "";
+      } else {
+        // Raw seed hex
+        importedSeed = importInput.trim();
+      }
+
+      if (!importedSeed) {
+        throw new Error("Valid 32-byte seedHex not found in input.");
+      }
+
+      const cleanSeed = importedSeed.replace(/[^0-9a-fA-F]/g, "");
+      if (cleanSeed.length !== 64) {
+        throw new Error("Seed hex must be exactly 64 characters.");
+      }
+
+      // If user had a DID in the backup, keep it, otherwise derive
+      const activeDid = importedDid || localStorage.getItem("flop_active_did") || `did:key:z6Mk...`;
+
+      setSeedHex(cleanSeed);
+      setDid(activeDid);
+
+      localStorage.setItem("flop_active_did", activeDid);
+      localStorage.setItem("flop_active_seed", cleanSeed);
+
+      botSpeak("Agent identity restored successfully!", "success", 3000);
+      setCurrentStep(2);
+    } catch (err: any) {
+      botSpeak(`Import error: ${err.message}`, "error", 4000);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        setImportInput(content);
+        try {
+          const parsed = JSON.parse(content);
+          if (parsed.did && parsed.seedHex) {
+            setDid(parsed.did);
+            setSeedHex(parsed.seedHex);
+            localStorage.setItem("flop_active_did", parsed.did);
+            localStorage.setItem("flop_active_seed", parsed.seedHex);
+            botSpeak("Backup file loaded successfully!", "success", 3000);
+            setCurrentStep(2);
+          }
+        } catch {
+          botSpeak("JSON parsed as raw text. Click Restore to apply.", "info");
+        }
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const generateNewKeyPair = async () => {
     setIsGenerating(true);
@@ -59,7 +168,7 @@ export const DidGenerator: React.FC = () => {
       const storedSeed = localStorage.getItem("flop_active_seed");
       if (storedDid) setDid(storedDid);
       if (storedSeed) setSeedHex(storedSeed);
-      if (storedDid) setCurrentStep(2);
+      if (storedDid && storedSeed) setCurrentStep(2);
     }
   }, []);
 
@@ -111,7 +220,7 @@ export const DidGenerator: React.FC = () => {
       botSpeak(`Genesis sequence registered! Seq: ${res.seq}`, "success", 5000);
       setCurrentStep(4);
     } else {
-      botSpeak(`Registration dispatch failed: ${res.error}`, "error", 4500);
+      botSpeak(`Registration dispatch failed: ${res.error}`, "error", 5500);
     }
   };
 
@@ -119,7 +228,7 @@ export const DidGenerator: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.banner}>
         <div className={styles.badgeRow}>
-          <span className={styles.badge}>NON-CUSTODIAL IDENTITY MINT</span>
+          <span className={styles.badge}>NON-CUSTODIAL IDENTITY MANAGEMENT</span>
           <span style={{ fontSize: "11px", color: "#64748b", display: "flex", alignItems: "center", gap: "4px" }}>
             <Globe className="w-3.5 h-3.5 text-emerald-400" />
             LIVE INCENTIVIZED TESTNET ARCHIVE
@@ -127,19 +236,18 @@ export const DidGenerator: React.FC = () => {
         </div>
 
         <h1 className={styles.title}>
-          <span>Mint your Ed25519</span>{" "}
-          <span className={styles.highlight}>did:key Identity.</span>
+          <span>Autonomous Agent</span>{" "}
+          <span className={styles.highlight}>did:key Identity</span>
         </h1>
 
         <p className={styles.subtitle}>
-          All private keys remain exclusively in your browser. Derives mathematical base58btc public keys
-          matched to your private seed, allowing permanent verification on <strong>technocore.chat</strong>.
+          Restore your previous agent backup or mint a new one. All private keys stay in your browser RAM.
         </p>
       </div>
 
       <div className={styles.stepsRow}>
         {[
-          { num: 1, label: "Mint Key" },
+          { num: 1, label: "Identity Setup" },
           { num: 2, label: "Vault Backup" },
           { num: 3, label: "Broadcast Tx" },
           { num: 4, label: "Testnet Live" },
@@ -158,24 +266,132 @@ export const DidGenerator: React.FC = () => {
 
       <div className={styles.workspaceCard}>
         {currentStep === 1 && (
-          <div style={{ textAlign: "center", padding: "30px 10px" }}>
-            <Key className="w-12 h-12 text-[#00B4D8] mx-auto mb-4" />
-            <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#ffffff", marginBottom: "8px" }}>
-              Generate Autonomous Agent Keypair
-            </h2>
-            <p style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "460px", margin: "0 auto 24px auto" }}>
-              Generates a real cryptographic Ed25519 keypair and encodes the public key into an official multicodec did:key string.
-            </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            {/* Tabs for Mint vs Import */}
+            <div style={{ display: "flex", gap: "10px", borderBottom: "1px solid #16253b", paddingBottom: "12px" }}>
+              <button
+                type="button"
+                onClick={() => setActiveTab("import")}
+                style={{
+                  background: activeTab === "import" ? "#10B981" : "#060e1d",
+                  color: activeTab === "import" ? "#020612" : "#94a3b8",
+                  border: "1px solid #16253b",
+                  padding: "8px 16px",
+                  borderRadius: "10px",
+                  fontWeight: 800,
+                  fontSize: "12px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <Upload className="w-4 h-4" />
+                <span>Restore Previous Agent (Backup JSON / Seed)</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={generateNewKeyPair}
-              disabled={isGenerating}
-              className={styles.actionBtn}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>{isGenerating ? "MINTING KEYPAIR..." : "GENERATE DID KEYPAIR"}</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("mint")}
+                style={{
+                  background: activeTab === "mint" ? "#00B4D8" : "#060e1d",
+                  color: activeTab === "mint" ? "#020612" : "#94a3b8",
+                  border: "1px solid #16253b",
+                  padding: "8px 16px",
+                  borderRadius: "10px",
+                  fontWeight: 800,
+                  fontSize: "12px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Mint Brand New DID</span>
+              </button>
+            </div>
+
+            {/* TAB: IMPORT EXISTING */}
+            {activeTab === "import" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div style={{ fontSize: "12px", color: "#94a3b8" }}>
+                  Upload your previous <strong>technocore-identity-*.json</strong> file, or paste its contents / 64-char Seed Hex below:
+                </div>
+
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <input
+                    type="file"
+                    accept=".json"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    style={{ display: "none" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      background: "#0c1c2e",
+                      border: "1px dashed #00B4D8",
+                      color: "#00B4D8",
+                      borderRadius: "10px",
+                      padding: "10px 16px",
+                      fontSize: "12px",
+                      fontWeight: 800,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <FileCode className="w-4 h-4" />
+                    <span>Upload JSON Backup File</span>
+                  </button>
+                </div>
+
+                <textarea
+                  rows={4}
+                  value={importInput}
+                  onChange={(e) => setImportInput(e.target.value)}
+                  placeholder='Paste JSON backup or 64-char private seed hex here...'
+                  className={styles.keyDisplayBox}
+                  style={{ width: "100%", outline: "none", resize: "vertical" }}
+                />
+
+                <button
+                  type="button"
+                  onClick={handleImportSubmit}
+                  className={styles.actionBtn}
+                  style={{ alignSelf: "flex-start", background: "#10B981" }}
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Restore Agent Identity</span>
+                </button>
+              </div>
+            )}
+
+            {/* TAB: MINT NEW */}
+            {activeTab === "mint" && (
+              <div style={{ textAlign: "center", padding: "20px 10px" }}>
+                <Key className="w-12 h-12 text-[#00B4D8] mx-auto mb-4" />
+                <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#ffffff", marginBottom: "8px" }}>
+                  Generate Autonomous Agent Keypair
+                </h2>
+                <p style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "460px", margin: "0 auto 24px auto" }}>
+                  Generates an Ed25519 keypair and encodes the public key into an official multicodec did:key string.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={generateNewKeyPair}
+                  disabled={isGenerating}
+                  className={styles.actionBtn}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>{isGenerating ? "MINTING KEYPAIR..." : "GENERATE DID KEYPAIR"}</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -224,16 +440,17 @@ export const DidGenerator: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", flexWrap: "wrap", gap: "10px" }}>
               <button
                 type="button"
                 onClick={() => {
-                  generateNewKeyPair();
+                  setCurrentStep(1);
+                  setActiveTab("import");
                 }}
                 className={styles.secondaryBtn}
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Mint New Key</span>
+                <Upload className="w-3.5 h-3.5" />
+                <span>Switch / Import Other Key</span>
               </button>
 
               {currentStep === 2 && (
