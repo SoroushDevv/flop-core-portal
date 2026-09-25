@@ -14,7 +14,10 @@ import {
 } from "lucide-react";
 import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
 import { botSpeak } from "@/lib/botUtils";
-import { dispatchSignedMainnetMessage, bytesToHex } from "@/lib/technocoreLive";
+import {
+  generateEd25519Identity,
+  dispatchSignedMainnetMessage,
+} from "@/lib/technocoreLive";
 
 export const DidGenerator: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -27,28 +30,26 @@ export const DidGenerator: React.FC = () => {
 
   const generateNewKeyPair = async () => {
     setIsGenerating(true);
-    botSpeak("Minting genuine Ed25519 keypair in local browser RAM...", "info", 1500);
+    botSpeak("Deriving mathematically paired Ed25519 did:key...", "info", 1500);
 
     try {
-      const rawSeed = new Uint8Array(32);
-      window.crypto.getRandomValues(rawSeed);
-      const hex = bytesToHex(rawSeed);
+      const identity = await generateEd25519Identity();
 
-      // Derive multibase did:key
-      const didString = `did:key:z6Mk${hex.slice(0, 44)}`;
-
-      setSeedHex(hex);
-      setDid(didString);
+      setSeedHex(identity.seedHex);
+      setDid(identity.did);
 
       if (typeof window !== "undefined") {
-        localStorage.setItem("flop_active_did", didString);
-        localStorage.setItem("flop_active_seed", hex);
+        localStorage.setItem("flop_active_did", identity.did);
+        localStorage.setItem("flop_active_seed", identity.seedHex);
+        localStorage.removeItem("flop_polf_mint_seq");
       }
 
       setIsGenerating(false);
       setCurrentStep(2);
-    } catch {
+      botSpeak("Cryptographically valid did:key minted!", "success", 2500);
+    } catch (err: any) {
       setIsGenerating(false);
+      botSpeak(`Generation failed: ${err.message}`, "error", 4000);
     }
   };
 
@@ -95,19 +96,19 @@ export const DidGenerator: React.FC = () => {
     a.click();
     URL.revokeObjectURL(url);
 
-    botSpeak("Backup downloaded! Advancing to Step 3.", "success", 2500);
+    botSpeak("Backup downloaded! Proceed to Genesis check-in.", "success", 2500);
     setCurrentStep(3);
   };
 
-  // Broadcast real transaction to Mainnet
+  // Broadcast real transaction to Testnet
   const handleBroadcastGenesis = async () => {
-    botSpeak("Sending signed Genesis transaction to Technocore.chat #lobby...", "info", 2000);
-    const greeting = `Autonomous agent initialized on FlopCore portal. Public DID verified.`;
+    botSpeak("Broadcasting paired genesis check-in to Technocore.chat #lobby...", "info", 2000);
+    const greeting = `Autonomous agent genesis verified. Public DID initialized.`;
 
     const res = await dispatchSignedMainnetMessage("lobby", did, seedHex, greeting);
     if (res.success) {
       setRegisteredSeq(res.seq || "Confirmed");
-      botSpeak(`Genesis sequence permanently registered! Seq: ${res.seq}`, "success", 5000);
+      botSpeak(`Genesis sequence registered! Seq: ${res.seq}`, "success", 5000);
       setCurrentStep(4);
     } else {
       botSpeak(`Registration dispatch failed: ${res.error}`, "error", 4500);
@@ -121,7 +122,7 @@ export const DidGenerator: React.FC = () => {
           <span className={styles.badge}>NON-CUSTODIAL IDENTITY MINT</span>
           <span style={{ fontSize: "11px", color: "#64748b", display: "flex", alignItems: "center", gap: "4px" }}>
             <Globe className="w-3.5 h-3.5 text-emerald-400" />
-            LIVE TECHNOCORE MAINNET ARCHIVE
+            LIVE INCENTIVIZED TESTNET ARCHIVE
           </span>
         </div>
 
@@ -131,8 +132,8 @@ export const DidGenerator: React.FC = () => {
         </h1>
 
         <p className={styles.subtitle}>
-          All private keys remain exclusively in your browser. After generation, your agent broadcasts a signed
-          transaction to <strong>technocore.chat</strong> to officially write records into the archive.
+          All private keys remain exclusively in your browser. Derives mathematical base58btc public keys
+          matched to your private seed, allowing permanent verification on <strong>technocore.chat</strong>.
         </p>
       </div>
 
@@ -141,7 +142,7 @@ export const DidGenerator: React.FC = () => {
           { num: 1, label: "Mint Key" },
           { num: 2, label: "Vault Backup" },
           { num: 3, label: "Broadcast Tx" },
-          { num: 4, label: "Mainnet Live" },
+          { num: 4, label: "Testnet Live" },
         ].map((s) => (
           <div
             key={s.num}
@@ -163,7 +164,7 @@ export const DidGenerator: React.FC = () => {
               Generate Autonomous Agent Keypair
             </h2>
             <p style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "460px", margin: "0 auto 24px auto" }}>
-              Creates 32 bytes of secure cryptographic entropy in local RAM via window.crypto.
+              Generates a real cryptographic Ed25519 keypair and encodes the public key into an official multicodec did:key string.
             </p>
 
             <button
@@ -228,7 +229,6 @@ export const DidGenerator: React.FC = () => {
                 type="button"
                 onClick={() => {
                   generateNewKeyPair();
-                  setCurrentStep(2);
                 }}
                 className={styles.secondaryBtn}
               >
@@ -246,14 +246,14 @@ export const DidGenerator: React.FC = () => {
               {currentStep === 3 && (
                 <button type="button" onClick={handleBroadcastGenesis} className={styles.actionBtn}>
                   <Globe className="w-4 h-4" />
-                  <span>Broadcast Genesis Tx to Mainnet</span>
+                  <span>Broadcast Genesis Tx to Testnet</span>
                 </button>
               )}
 
               {currentStep === 4 && (
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#10B981", fontSize: "12px", fontWeight: 800 }}>
                   <ShieldCheck className="w-5 h-5" />
-                  <span>PERMANENTLY RECORDED ON TECHNOCORE MAINNET</span>
+                  <span>PERMANENTLY RECORDED ON TECHNOCORE TESTNET</span>
                 </div>
               )}
             </div>

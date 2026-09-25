@@ -1,5 +1,35 @@
-// Official Technocore Protocol Interface
+// Official Technocore Protocol Interface & W3C Ed25519 did:key Engine
 export const PROXY_BASE = "/api/technocore";
+
+const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+/**
+ * Base58BTC encoder compliant with multibase specification
+ */
+export function base58Encode(source: Uint8Array): string {
+  if (source.length === 0) return "";
+  const digits = [0];
+  for (let i = 0; i < source.length; i++) {
+    let carry = source[i];
+    for (let j = 0; j < digits.length; j++) {
+      carry += digits[j] << 8;
+      digits[j] = carry % 58;
+      carry = (carry / 58) | 0;
+    }
+    while (carry > 0) {
+      digits.push(carry % 58);
+      carry = (carry / 58) | 0;
+    }
+  }
+  let str = "";
+  for (let i = 0; i < source.length && source[i] === 0; i++) {
+    str += "1";
+  }
+  for (let i = digits.length - 1; i >= 0; i--) {
+    str += BASE58_ALPHABET[digits[i]];
+  }
+  return str;
+}
 
 function base64UrlEncode(bytes: Uint8Array): string {
   let binary = "";
@@ -12,7 +42,7 @@ function base64UrlEncode(bytes: Uint8Array): string {
     .replace(/=+$/, "");
 }
 
-function hexToBytes(hex: string): Uint8Array {
+export function hexToBytes(hex: string): Uint8Array {
   const clean = hex.replace(/[^0-9a-fA-F]/g, "");
   const bytes = new Uint8Array(clean.length / 2);
   for (let i = 0; i < bytes.length; i++) {
@@ -25,6 +55,44 @@ export function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+export interface GeneratedIdentity {
+  did: string;
+  seedHex: string;
+}
+
+/**
+ * Mints an authentic, cryptographically paired Ed25519 did:key and 32-byte seed
+ */
+export async function generateEd25519Identity(): Promise<GeneratedIdentity> {
+  // 1. Generate real Ed25519 keypair via WebCrypto
+  const keyPair = await window.crypto.subtle.generateKey(
+    { name: "Ed25519" },
+    true,
+    ["sign", "verify"]
+  );
+
+  // 2. Export raw 32-byte public key
+  const rawPubBuffer = await window.crypto.subtle.exportKey("raw", keyPair.publicKey);
+  const rawPubBytes = new Uint8Array(rawPubBuffer);
+
+  // 3. Multicodec prefix for ed25519-pub is 0xed, 0x01
+  const multicodec = new Uint8Array(2 + 32);
+  multicodec[0] = 0xed;
+  multicodec[1] = 0x01;
+  multicodec.set(rawPubBytes, 2);
+
+  // 4. Multibase base58btc prefix is 'z' -> produces valid 'did:key:z6Mk...'
+  const did = `did:key:z${base58Encode(multicodec)}`;
+
+  // 5. Export PKCS8 private key and extract raw 32-byte seed (bytes 16..48)
+  const pkcs8Buffer = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+  const pkcs8Bytes = new Uint8Array(pkcs8Buffer);
+  const rawSeed = pkcs8Bytes.slice(16, 48);
+  const seedHex = bytesToHex(rawSeed);
+
+  return { did, seedHex };
 }
 
 export interface LiveMessage {
@@ -62,7 +130,6 @@ export async function fetchMainnetRoomMessages(
     let maxSeq = sinceSeq || 0;
 
     for (const line of lines) {
-      // Expected server format: "<seq> <time> <sender> <text>"
       const space1 = line.indexOf(" ");
       if (space1 === -1) continue;
 
@@ -108,19 +175,17 @@ export async function dispatchSignedMainnetMessage(
   rawText: string
 ): Promise<{ success: boolean; seq?: string; error?: string }> {
   try {
-    // 1. Single-line sweep required by Technocore
     const cleanText = rawText.replace(/[\r\n\t]/g, " ").trim();
     if (!cleanText) return { success: false, error: "Empty message text" };
 
-    // 2. 1 to 19 digit nonce strictly increasing
     const nonce = Date.now().toString();
 
-    // 3. Exact canonical target: room|nonce|text
+    // Canonical target: room|nonce|text
     const canonical = `${room}|${nonce}|${cleanText}`;
     const encoder = new TextEncoder();
     const canonicalBytes = encoder.encode(canonical);
 
-    // 4. Ed25519 key derivation (PKCS8 container around 32-byte seed)
+    // PKCS8 wrapper for 32-byte Ed25519 seed
     const seedBytes = hexToBytes(privateSeedHex);
     const pkcs8Prefix = new Uint8Array([
       0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70,
@@ -146,8 +211,9 @@ export async function dispatchSignedMainnetMessage(
 
     const sigBase64Url = base64UrlEncode(new Uint8Array(sigBuffer));
 
-    // 5. Send real write request via proxy to https://technocore.chat
+    // The did passed to say-signed MUST be the base58 part (z6Mk...)
     const cleanDid = did.replace("did:key:", "");
+
     const endpoint = `${PROXY_BASE}/r/${encodeURIComponent(room)}/say-signed/${encodeURIComponent(
       cleanDid
     )}/${encodeURIComponent(sigBase64Url)}/${nonce}/${encodeURIComponent(cleanText)}`;
