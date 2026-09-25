@@ -66,27 +66,22 @@ export interface GeneratedIdentity {
  * Mints an authentic, cryptographically paired Ed25519 did:key and 32-byte seed
  */
 export async function generateEd25519Identity(): Promise<GeneratedIdentity> {
-  // 1. Generate real Ed25519 keypair via WebCrypto
   const keyPair = await window.crypto.subtle.generateKey(
     { name: "Ed25519" },
     true,
     ["sign", "verify"]
   );
 
-  // 2. Export raw 32-byte public key
   const rawPubBuffer = await window.crypto.subtle.exportKey("raw", keyPair.publicKey);
   const rawPubBytes = new Uint8Array(rawPubBuffer);
 
-  // 3. Multicodec prefix for ed25519-pub is 0xed, 0x01
   const multicodec = new Uint8Array(2 + 32);
   multicodec[0] = 0xed;
   multicodec[1] = 0x01;
   multicodec.set(rawPubBytes, 2);
 
-  // 4. Multibase base58btc prefix is 'z' -> produces valid 'did:key:z6Mk...'
   const did = `did:key:z${base58Encode(multicodec)}`;
 
-  // 5. Export PKCS8 private key and extract raw 32-byte seed (bytes 16..48)
   const pkcs8Buffer = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
   const pkcs8Bytes = new Uint8Array(pkcs8Buffer);
   const rawSeed = pkcs8Bytes.slice(16, 48);
@@ -166,11 +161,12 @@ export async function fetchMainnetRoomMessages(
 }
 
 /**
- * Derives authentic Ed25519 signature and executes GET /r/{room}/say-signed/...
+ * Dispatches a cryptographically signed message to Technocore Mainnet/Testnet
+ * Endpoint: GET /r/{room}/say-signed/{bare_did}/{sig}/{nonce}/{text}
  */
 export async function dispatchSignedMainnetMessage(
   room: string,
-  did: string,
+  rawDid: string,
   privateSeedHex: string,
   rawText: string
 ): Promise<{ success: boolean; seq?: string; error?: string }> {
@@ -178,14 +174,17 @@ export async function dispatchSignedMainnetMessage(
     const cleanText = rawText.replace(/[\r\n\t]/g, " ").trim();
     if (!cleanText) return { success: false, error: "Empty message text" };
 
+    // Strip ALL occurrences of "did:key:" so only bare base58 identifier (e.g. z6Mk...) remains in the URL
+    const bareDid = rawDid.replace(/^(did:key:)+/i, "").trim();
+
     const nonce = Date.now().toString();
 
-    // Canonical target: room|nonce|text
+    // Canonical signing payload: room|nonce|text
     const canonical = `${room}|${nonce}|${cleanText}`;
     const encoder = new TextEncoder();
     const canonicalBytes = encoder.encode(canonical);
 
-    // PKCS8 wrapper for 32-byte Ed25519 seed
+    // Derive Ed25519 private key from 32-byte seed
     const seedBytes = hexToBytes(privateSeedHex);
     const pkcs8Prefix = new Uint8Array([
       0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70,
@@ -211,11 +210,9 @@ export async function dispatchSignedMainnetMessage(
 
     const sigBase64Url = base64UrlEncode(new Uint8Array(sigBuffer));
 
-    // The did passed to say-signed MUST be the base58 part (z6Mk...)
-    const cleanDid = did.replace("did:key:", "");
-
+    // Notice: bareDid is used here because Technocore server prepends "did:key:" automatically
     const endpoint = `${PROXY_BASE}/r/${encodeURIComponent(room)}/say-signed/${encodeURIComponent(
-      cleanDid
+      bareDid
     )}/${encodeURIComponent(sigBase64Url)}/${nonce}/${encodeURIComponent(cleanText)}`;
 
     const res = await fetch(endpoint, {

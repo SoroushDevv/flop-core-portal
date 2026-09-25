@@ -12,8 +12,6 @@ import {
   BrainCircuit,
   Sparkles,
   RefreshCw,
-  ShieldCheck,
-  AlertCircle,
   Lock,
 } from "lucide-react";
 import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
@@ -121,14 +119,18 @@ export const CloseCallChallenge: React.FC = () => {
       return;
     }
 
+    // Strip duplicate prefix to obtain canonical did
+    const bareDid = userDid.replace(/^(did:key:)+/i, "").trim();
+    const canonicalDid = `did:key:${bareDid}`;
+
     setIsMinting(true);
     botSpeak("Broadcasting signed POLF Mint transaction to Technocore...", "info", 2500);
 
-    const mintPayload = `CLOSE_CALL_MINT|CONTEST:close-1|ACTION:MINT_POLF|AMOUNT:10000|DID:${userDid}`;
+    const mintPayload = `CLOSE_CALL_MINT|CONTEST:close-1|ACTION:MINT_POLF|AMOUNT:10000|DID:${canonicalDid}`;
 
     const res = await dispatchSignedMainnetMessage(
       "mb-sonnet-2-discovery",
-      userDid,
+      bareDid,
       userSeed,
       mintPayload
     );
@@ -140,7 +142,7 @@ export const CloseCallChallenge: React.FC = () => {
       botSpeak(`10,000 POLF successfully minted on ledger! Seq: ${res.seq}`, "success", 5000);
       fetchLiveTrades();
     } else {
-      botSpeak(`Mint dispatch rejected: ${res.error}`, "error", 4500);
+      botSpeak(`Mint dispatch rejected: ${res.error}`, "error", 5000);
     }
 
     setIsMinting(false);
@@ -217,11 +219,14 @@ export const CloseCallChallenge: React.FC = () => {
     setIsSubmitting(true);
     botSpeak("Agent signing order with Ed25519 key...", "info", 2000);
 
-    const payload = `CLOSE_CALL|CONTEST:close-1|PAIR:xyz:NVDA|SIDE:${agentDecision.direction}|PRICE:${agentDecision.targetPrice}|POLF:10000|EXPIRY:2026-10-04T10:00:00Z|DID:${userDid}`;
+    const bareDid = userDid.replace(/^(did:key:)+/i, "").trim();
+    const canonicalDid = `did:key:${bareDid}`;
+
+    const payload = `CLOSE_CALL|CONTEST:close-1|PAIR:xyz:NVDA|SIDE:${agentDecision.direction}|PRICE:${agentDecision.targetPrice}|POLF:10000|EXPIRY:2026-10-04T10:00:00Z|DID:${canonicalDid}`;
 
     const res = await dispatchSignedMainnetMessage(
       "mb-sonnet-2-discovery",
-      userDid,
+      bareDid,
       userSeed,
       payload
     );
