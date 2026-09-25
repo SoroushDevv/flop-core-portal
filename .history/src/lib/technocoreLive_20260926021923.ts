@@ -69,45 +69,6 @@ export interface GeneratedIdentity {
   seedHex: string;
 }
 
-/**
- * Derives the exact cryptographic multicodec did:key from raw 32-byte Ed25519 seed
- */
-export async function deriveDidFromSeedBytes(seedBytes: Uint8Array): Promise<string> {
-  const pkcs8Prefix = new Uint8Array([
-    0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70,
-    0x04, 0x22, 0x04, 0x20,
-  ]);
-  const fullPkcs8 = new Uint8Array(pkcs8Prefix.length + seedBytes.length);
-  fullPkcs8.set(pkcs8Prefix, 0);
-  fullPkcs8.set(seedBytes, pkcs8Prefix.length);
-
-  const privateKey = await crypto.subtle.importKey(
-    "pkcs8",
-    fullPkcs8 as BufferSource,
-    { name: "Ed25519" },
-    true,
-    ["sign"]
-  );
-
-  const jwk = await crypto.subtle.exportKey("jwk", privateKey);
-  if (jwk.x) {
-    const rawPubBase64 = jwk.x.replace(/-/g, "+").replace(/_/g, "/");
-    const binary = atob(rawPubBase64);
-    const pubBytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      pubBytes[i] = binary.charCodeAt(i);
-    }
-
-    const multicodec = new Uint8Array(2 + 32);
-    multicodec[0] = 0xed;
-    multicodec[1] = 0x01;
-    multicodec.set(pubBytes, 2);
-    return `did:key:z${base58Encode(multicodec)}`;
-  }
-
-  return `did:key:z6Mk${base58Encode(seedBytes)}`;
-}
-
 export async function generateEd25519Identity(): Promise<GeneratedIdentity> {
   const keyPair = await window.crypto.subtle.generateKey(
     { name: "Ed25519" },

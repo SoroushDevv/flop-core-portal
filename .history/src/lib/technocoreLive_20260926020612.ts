@@ -1,8 +1,13 @@
-// Official Technocore Protocol Interface
+// Official Technocore Protocol Interface & RFC 8032 Ed25519 Engine
+import { ed25519 } from "@noble/curves/ed25519";
+
 export const PROXY_BASE = "/api/technocore";
 
 const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
+/**
+ * Base58BTC encoder compliant with multibase specification
+ */
 export function base58Encode(source: Uint8Array): string {
   if (source.length === 0) return "";
   const digits = [0];
@@ -28,6 +33,9 @@ export function base58Encode(source: Uint8Array): string {
   return str;
 }
 
+/**
+ * Base64URL encoder without padding
+ */
 function base64UrlEncode(bytes: Uint8Array): string {
   let binary = "";
   for (let i = 0; i < bytes.byteLength; i++) {
@@ -54,6 +62,9 @@ export function bytesToHex(bytes: Uint8Array): string {
     .join("");
 }
 
+/**
+ * Sanitizes any raw DID string into standard "did:key:z6Mk..."
+ */
 export function cleanDidKey(raw: string): string {
   if (!raw) return "";
   const match = raw.match(/z6Mk[1-9A-HJ-NP-Za-km-z]{44,52}/);
@@ -70,65 +81,25 @@ export interface GeneratedIdentity {
 }
 
 /**
- * Derives the exact cryptographic multicodec did:key from raw 32-byte Ed25519 seed
+ * Derives public key and multicodec did:key from private seed bytes
  */
-export async function deriveDidFromSeedBytes(seedBytes: Uint8Array): Promise<string> {
-  const pkcs8Prefix = new Uint8Array([
-    0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70,
-    0x04, 0x22, 0x04, 0x20,
-  ]);
-  const fullPkcs8 = new Uint8Array(pkcs8Prefix.length + seedBytes.length);
-  fullPkcs8.set(pkcs8Prefix, 0);
-  fullPkcs8.set(seedBytes, pkcs8Prefix.length);
-
-  const privateKey = await crypto.subtle.importKey(
-    "pkcs8",
-    fullPkcs8 as BufferSource,
-    { name: "Ed25519" },
-    true,
-    ["sign"]
-  );
-
-  const jwk = await crypto.subtle.exportKey("jwk", privateKey);
-  if (jwk.x) {
-    const rawPubBase64 = jwk.x.replace(/-/g, "+").replace(/_/g, "/");
-    const binary = atob(rawPubBase64);
-    const pubBytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      pubBytes[i] = binary.charCodeAt(i);
-    }
-
-    const multicodec = new Uint8Array(2 + 32);
-    multicodec[0] = 0xed;
-    multicodec[1] = 0x01;
-    multicodec.set(pubBytes, 2);
-    return `did:key:z${base58Encode(multicodec)}`;
-  }
-
-  return `did:key:z6Mk${base58Encode(seedBytes)}`;
-}
-
-export async function generateEd25519Identity(): Promise<GeneratedIdentity> {
-  const keyPair = await window.crypto.subtle.generateKey(
-    { name: "Ed25519" },
-    true,
-    ["sign", "verify"]
-  );
-
-  const rawPubBuffer = await window.crypto.subtle.exportKey("raw", keyPair.publicKey);
-  const rawPubBytes = new Uint8Array(rawPubBuffer);
-
+export function deriveDidFromSeedBytes(seedBytes: Uint8Array): string {
+  const publicKey = ed25519.getPublicKey(seedBytes);
   const multicodec = new Uint8Array(2 + 32);
   multicodec[0] = 0xed;
   multicodec[1] = 0x01;
-  multicodec.set(rawPubBytes, 2);
+  multicodec.set(publicKey, 2);
+  return `did:key:z${base58Encode(multicodec)}`;
+}
 
-  const did = `did:key:z${base58Encode(multicodec)}`;
-
-  const pkcs8Buffer = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
-  const pkcs8Bytes = new Uint8Array(pkcs8Buffer);
-  const rawSeed = pkcs8Bytes.slice(16, 48);
-  const seedHex = bytesToHex(rawSeed);
+/**
+ * Mints an authentic, cryptographically paired Ed25519 did:key and 32-byte seed
+ */
+export async function generateEd25519Identity(): Promise<GeneratedIdentity> {
+  const seedBytes = new Uint8Array(32);
+  window.crypto.getRandomValues(seedBytes);
+  const seedHex = bytesToHex(seedBytes);
+  const did = deriveDidFromSeedBytes(seedBytes);
 
   return { did, seedHex };
 }
@@ -204,7 +175,8 @@ export async function fetchMainnetRoomMessages(
 }
 
 /**
- * Dispatches a cryptographically signed message to Technocore
+ * Dispatches a cryptographically signed message to Technocore Mainnet/Testnet
+ * Produces pure RFC 8032 Ed25519 signature verified on technocore.chat
  */
 export async function dispatchSignedMainnetMessage(
   room: string,
@@ -218,10 +190,12 @@ export async function dispatchSignedMainnetMessage(
 
     const seedBytes = hexToBytes(privateSeedHex);
     if (seedBytes.length !== 32) {
-      return { success: false, error: `Seed length must be 32 bytes (got ${seedBytes.length})` };
+      return { success: false, error: `Invalid seed length: ${seedBytes.length} bytes (expected 32)` };
     }
 
-    const canonicalDid = cleanDidKey(rawDid);
+    // Mathematically derive the exact did:key from the seed to guarantee zero mismatch
+    const canonicalDid = deriveDidFromSeedBytes(seedBytes);
+
     const nonce = Date.now().toString();
 
     // Canonical signing payload: room|nonce|text
@@ -229,30 +203,9 @@ export async function dispatchSignedMainnetMessage(
     const encoder = new TextEncoder();
     const canonicalBytes = encoder.encode(canonical);
 
-    // Ed25519 PKCS8 DER Structure
-    const pkcs8Prefix = new Uint8Array([
-      0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70,
-      0x04, 0x22, 0x04, 0x20,
-    ]);
-    const fullPkcs8 = new Uint8Array(pkcs8Prefix.length + seedBytes.length);
-    fullPkcs8.set(pkcs8Prefix, 0);
-    fullPkcs8.set(seedBytes, pkcs8Prefix.length);
-
-    const privateKey = await crypto.subtle.importKey(
-      "pkcs8",
-      fullPkcs8 as BufferSource,
-      { name: "Ed25519" },
-      false,
-      ["sign"]
-    );
-
-    const sigBuffer = await crypto.subtle.sign(
-      "Ed25519",
-      privateKey,
-      canonicalBytes as BufferSource
-    );
-
-    const sigBase64Url = base64UrlEncode(new Uint8Array(sigBuffer));
+    // Sign with noble ed25519
+    const sigBytes = ed25519.sign(canonicalBytes, seedBytes);
+    const sigBase64Url = base64UrlEncode(sigBytes);
 
     const endpoint = `${PROXY_BASE}/r/${encodeURIComponent(room)}/say-signed/${canonicalDid}/${sigBase64Url}/${nonce}/${encodeURIComponent(cleanText)}`;
 

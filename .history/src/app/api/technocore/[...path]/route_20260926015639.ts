@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
+export async function GET(request: NextRequest) {
   try {
-    const resolvedParams = await params;
-    const pathParts = resolvedParams.path || [];
-    // Reconstruct the original path preserving did:key and query string
-    const subPath = pathParts.join("/");
+    const pathname = request.nextUrl.pathname;
+    // Extract subpath preserving raw characters like colons in did:key:
+    const subPath = pathname.replace(/^\/api\/technocore\/?/, "");
     const search = request.nextUrl.search;
 
     const targetUrl = `https://technocore.chat/${subPath}${search}`;
@@ -20,19 +15,18 @@ export async function GET(
       method: "GET",
       headers: {
         Accept: "text/plain",
-        "Cache-Control": "no-cache",
+        "User-Agent": "FlopCore-Portal/1.0",
       },
       cache: "no-store",
     });
 
     const bodyText = await upstreamRes.text();
-
     return new NextResponse(bodyText, {
       status: upstreamRes.status,
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-store, no-cache, must-revalidate",
         "Access-Control-Allow-Origin": "*",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
       },
     });
   } catch (err: any) {
