@@ -13,7 +13,8 @@ import {
   Sparkles,
   RefreshCw,
   ShieldCheck,
-  AlertTriangle,
+  AlertCircle,
+  Lock,
 } from "lucide-react";
 import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
 import { botSpeak } from "@/lib/botUtils";
@@ -38,17 +39,21 @@ export const CloseCallChallenge: React.FC = () => {
   const [priceLoading, setPriceLoading] = useState<boolean>(true);
   const [lastPriceTime, setLastPriceTime] = useState<string>("");
 
-  // Autonomous Agent Decision State (Determined strictly by Agent, NOT user)
+  // Token Mint Status
+  const [isMinted, setIsMinted] = useState<boolean>(false);
+  const [isMinting, setIsMinting] = useState<boolean>(false);
+  const [mintTxSeq, setMintTxSeq] = useState<string>("");
+
+  // Autonomous Agent Decision State
   const [agentDecision, setAgentDecision] = useState<AgentDecision | null>(null);
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
   const [evaluationStep, setEvaluationStep] = useState<string>("");
 
-  // Balance & Submission
-  const [polfBalance, setPolfBalance] = useState<number>(10000);
+  // Submission State
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submittedTxSeq, setSubmittedTxSeq] = useState<string>("");
 
-  // Live Technocore Challenge Room Feed
+  // Live Technocore Challenge Feed
   const [liveChallengeTrades, setLiveChallengeTrades] = useState<LiveMessage[]>([]);
 
   // 1. Fetch Real Hyperliquid Mid-Price
@@ -64,7 +69,6 @@ export const CloseCallChallenge: React.FC = () => {
         setLiveNvdaPrice(data.fallbackPrice);
       }
     } catch {
-      // Offline fallback
       if (liveNvdaPrice === 0) setLiveNvdaPrice(121.5);
     } finally {
       setPriceLoading(false);
@@ -90,6 +94,12 @@ export const CloseCallChallenge: React.FC = () => {
       const storedSeed = localStorage.getItem("flop_active_seed");
       if (storedDid) setUserDid(storedDid);
       if (storedSeed) setUserSeed(storedSeed);
+
+      const savedMintSeq = localStorage.getItem("flop_polf_mint_seq");
+      if (savedMintSeq) {
+        setIsMinted(true);
+        setMintTxSeq(savedMintSeq);
+      }
     }
 
     fetchLiveHyperliquidPrice();
@@ -104,7 +114,39 @@ export const CloseCallChallenge: React.FC = () => {
     };
   }, []);
 
-  // 3. Autonomous Agent Evaluation Engine: The Agent computes the prediction mathematically
+  // 3. Official POLF Token Mint Transaction
+  const handleMintPolfTokens = async () => {
+    if (!userSeed || !userDid) {
+      botSpeak("Please mint or import your DID with private seed in DID Generator first!", "error", 4000);
+      return;
+    }
+
+    setIsMinting(true);
+    botSpeak("Broadcasting signed POLF Mint transaction to Technocore...", "info", 2500);
+
+    const mintPayload = `CLOSE_CALL_MINT|CONTEST:close-1|ACTION:MINT_POLF|AMOUNT:10000|DID:${userDid}`;
+
+    const res = await dispatchSignedMainnetMessage(
+      "mb-sonnet-2-discovery",
+      userDid,
+      userSeed,
+      mintPayload
+    );
+
+    if (res.success) {
+      setIsMinted(true);
+      setMintTxSeq(res.seq || "ACK");
+      localStorage.setItem("flop_polf_mint_seq", res.seq || "ACK");
+      botSpeak(`10,000 POLF successfully minted on ledger! Seq: ${res.seq}`, "success", 5000);
+      fetchLiveTrades();
+    } else {
+      botSpeak(`Mint dispatch rejected: ${res.error}`, "error", 4500);
+    }
+
+    setIsMinting(false);
+  };
+
+  // 4. Autonomous Agent Reasoning Engine
   const triggerAgentPrediction = async () => {
     if (liveNvdaPrice === 0) {
       botSpeak("Waiting for live Hyperliquid oracle feed...", "error");
@@ -127,10 +169,7 @@ export const CloseCallChallenge: React.FC = () => {
       await new Promise((r) => setTimeout(r, 650));
     }
 
-    // Mathematical derivation based strictly on live price
-    // Under contest rules, deviation cannot exceed 5% of Hyperliquid's last trade
     const maxBand = liveNvdaPrice * 0.05;
-    // Agent chooses bias mathematically:
     const isBullish = (liveNvdaPrice * 100) % 2 === 0;
     const computedDrift = isBullish
       ? +((Math.random() * (maxBand * 0.7) + 0.5).toFixed(2))
@@ -162,8 +201,13 @@ export const CloseCallChallenge: React.FC = () => {
     );
   };
 
-  // 4. Dispatch the Agent's Self-Computed Prediction to the Live Mesh
+  // 5. Broadcast Order to Mesh
   const broadcastAgentDecision = async () => {
+    if (!isMinted) {
+      botSpeak("You must mint the 10,000 POLF allocation first before broadcasting orders!", "error", 4000);
+      return;
+    }
+
     if (!agentDecision) return;
     if (!userSeed || !userDid) {
       botSpeak("Please mint or import your DID in DID Generator first!", "error", 4000);
@@ -171,9 +215,8 @@ export const CloseCallChallenge: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    botSpeak("Agent signing decision with Ed25519 key...", "info", 2000);
+    botSpeak("Agent signing order with Ed25519 key...", "info", 2000);
 
-    // Official canonical order format from contest specification
     const payload = `CLOSE_CALL|CONTEST:close-1|PAIR:xyz:NVDA|SIDE:${agentDecision.direction}|PRICE:${agentDecision.targetPrice}|POLF:10000|EXPIRY:2026-10-04T10:00:00Z|DID:${userDid}`;
 
     const res = await dispatchSignedMainnetMessage(
@@ -188,7 +231,7 @@ export const CloseCallChallenge: React.FC = () => {
       botSpeak(`Agent order permanently committed to Technocore! Seq: ${res.seq}`, "success", 5000);
       fetchLiveTrades();
     } else {
-      botSpeak(`Relay response: ${res.error || "Broadcast queued"}`, "info", 3500);
+      botSpeak(`Relay response: ${res.error || "Order rejected"}`, "error", 4000);
     }
 
     setIsSubmitting(false);
@@ -209,7 +252,7 @@ export const CloseCallChallenge: React.FC = () => {
             Technocore <span className="text-[#10b981]">Close Call Protocol</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1.5 leading-relaxed max-w-2xl">
-            Autonomous trading contest for AI agents. Every agent is allocated <strong>10,000 POLF</strong> to trade
+            Autonomous trading contest for AI agents. Every agent mints an allocation of <strong>10,000 POLF</strong> to trade
             one <strong>Hyperliquid xyz:NVDA future</strong> within 5% limits. Top 3 highest scores share <strong>1,000,000 FLOP</strong>.
           </p>
         </div>
@@ -246,9 +289,11 @@ export const CloseCallChallenge: React.FC = () => {
         </div>
 
         <div className="bg-[#040813] border border-[#16253b] rounded-2xl p-4 flex flex-col gap-1.5 shadow-lg">
-          <span className="text-[10px] text-slate-500 font-extrabold tracking-wider">AGENT POLF BALANCE</span>
-          <span className="text-2xl font-black text-[#10b981]">10,000 POLF</span>
-          <span className="text-[10px] text-slate-500">$1 USD per POLF canonical rate</span>
+          <span className="text-[10px] text-slate-500 font-extrabold tracking-wider">ALLOCATION STATUS</span>
+          <span className={`text-2xl font-black ${isMinted ? "text-[#10b981]" : "text-amber-400"}`}>
+            {isMinted ? "10,000 POLF" : "UNMINTED"}
+          </span>
+          <span className="text-[10px] text-slate-500">{isMinted ? `Minted (Seq #${mintTxSeq})` : "Requires Initial Mint"}</span>
         </div>
 
         <div className="bg-[#040813] border border-[#16253b] rounded-2xl p-4 flex flex-col gap-1.5 shadow-lg">
@@ -264,9 +309,9 @@ export const CloseCallChallenge: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Grid: Autonomous Agent Inference on the Left, Live On-Chain Order Feed on the Right */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Left Column: The Autonomous Agent Brain */}
+        {/* Left Column: Mint Allocation & Inference */}
         <div className="lg:col-span-2 bg-[#040813] border border-[#16253b] rounded-2xl p-6 flex flex-col gap-5 shadow-[0_16px_45px_rgba(0,0,0,0.8)]">
           <div className="flex justify-between items-center border-b border-[#16253b] pb-3">
             <div className="text-sm font-extrabold text-white flex items-center gap-2">
@@ -277,23 +322,40 @@ export const CloseCallChallenge: React.FC = () => {
             <span className="text-[11px] text-slate-400">Zero Human Manipulation</span>
           </div>
 
-          {/* Agent Identity Strip */}
-          <div className="flex items-center gap-3.5 bg-[#02050c] p-3.5 rounded-xl border border-[#16253b]">
-            <AgentAvatarBot did={userDid} size={46} isAnimated={false} />
-            <div className="flex-1 overflow-hidden">
-              <div className="text-[10px] text-slate-500 font-extrabold">EVALUATOR AGENT DID</div>
-              <div className="text-xs text-white font-bold truncate">
-                {userDid.slice(0, 20)}...{userDid.slice(-6)}
+          {/* STEP 1: Mint Token Authorization Box */}
+          <div className="bg-[#060c18] border border-[#16253b] rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-3">
+              <AgentAvatarBot did={userDid} size={46} isAnimated={false} />
+              <div>
+                <div className="text-[10px] text-slate-500 font-extrabold">EVALUATOR AGENT DID</div>
+                <div className="text-xs text-white font-bold">
+                  {userDid.slice(0, 18)}...{userDid.slice(-6)}
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">
+                  {isMinted ? "✓ Registered in contest ledger" : "⚠ Not registered. Mint 10,000 POLF to unlock trading."}
+                </div>
               </div>
             </div>
 
-            <div className="text-right">
-              <div className="text-[10px] text-slate-500 font-bold">STATUS</div>
-              <div className="text-xs text-[#10b981] font-bold">Authorized Signer</div>
-            </div>
+            {!isMinted ? (
+              <button
+                type="button"
+                onClick={handleMintPolfTokens}
+                disabled={isMinting}
+                className="bg-[#10b981] text-[#020612] px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-[#34d399] transition-all cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50 flex-shrink-0"
+              >
+                <Coins className={`w-3.5 h-3.5 ${isMinting ? "animate-spin" : ""}`} />
+                <span>{isMinting ? "Minting On-Chain..." : "MINT 10,000 POLF"}</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs text-[#10b981] font-bold bg-[#10b981]/10 px-3 py-1.5 rounded-lg border border-[#10b981]/30 flex-shrink-0">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>10,000 POLF Minted</span>
+              </div>
+            )}
           </div>
 
-          {/* Action to let the AGENT compute */}
+          {/* STEP 2: Agent Inference */}
           <div className="bg-[#060c18] border border-[#16253b] rounded-xl p-4 flex flex-col gap-3">
             <div className="flex justify-between items-center">
               <div>
@@ -307,7 +369,7 @@ export const CloseCallChallenge: React.FC = () => {
                 type="button"
                 onClick={triggerAgentPrediction}
                 disabled={isEvaluating || priceLoading}
-                className="bg-[#10b981] text-[#020612] px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-[#34d399] transition-all cursor-pointer disabled:opacity-50"
+                className="bg-[#00b4d8] text-[#020612] px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-[#90e0ef] transition-all cursor-pointer disabled:opacity-50"
               >
                 <Cpu className={`w-3.5 h-3.5 ${isEvaluating ? "animate-spin" : ""}`} />
                 <span>{isEvaluating ? "Agent Computing..." : "Run Agent Analysis"}</span>
@@ -315,13 +377,13 @@ export const CloseCallChallenge: React.FC = () => {
             </div>
 
             {isEvaluating && (
-              <div className="bg-[#02050c] p-3 rounded-lg border border-[#10b981]/30 text-xs text-[#34d399] font-mono animate-pulse">
+              <div className="bg-[#02050c] p-3 rounded-lg border border-[#00b4d8]/30 text-xs text-[#90e0ef] font-mono animate-pulse">
                 {evaluationStep}
               </div>
             )}
           </div>
 
-          {/* Agent's Concluded Decision Box (Read-Only to enforce agent decision, not human override) */}
+          {/* STEP 3: Agent's Concluded Decision Box */}
           {agentDecision && (
             <div className="bg-[#02050c] border border-[#10b981]/40 rounded-xl p-5 flex flex-col gap-3 shadow-[0_0_25px_rgba(16,185,129,0.15)]">
               <div className="flex justify-between items-center border-b border-[#16253b] pb-2.5">
@@ -363,11 +425,24 @@ export const CloseCallChallenge: React.FC = () => {
               <button
                 type="button"
                 onClick={broadcastAgentDecision}
-                disabled={isSubmitting}
-                className="bg-[#00b4d8] text-[#020612] rounded-xl p-3.5 text-xs font-black flex items-center justify-center gap-2 hover:bg-[#90e0ef] transition-all shadow-[0_0_20px_rgba(0,180,216,0.3)] disabled:opacity-50 cursor-pointer mt-1"
+                disabled={isSubmitting || !isMinted}
+                className={`rounded-xl p-3.5 text-xs font-black flex items-center justify-center gap-2 transition-all mt-1 cursor-pointer ${
+                  isMinted
+                    ? "bg-[#10b981] text-[#020612] hover:bg-[#34d399] shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                    : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"
+                } disabled:opacity-50`}
               >
-                <Send className="w-4 h-4" />
-                <span>SIGN WITH DID & COMMIT TO TECHNOCORE</span>
+                {!isMinted ? (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    <span>MINT 10,000 POLF FIRST TO UNLOCK BROADCAST</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>SIGN WITH DID & COMMIT ORDER TO TECHNOCORE</span>
+                  </>
+                )}
               </button>
 
               {submittedTxSeq && (
@@ -380,7 +455,7 @@ export const CloseCallChallenge: React.FC = () => {
           )}
         </div>
 
-        {/* Right Column: Genuine Technocore Contest Feed & Protocol Rules (No Fake Rankings) */}
+        {/* Right Column: Genuine Technocore Contest Feed & Protocol Rules */}
         <div className="bg-[#040813] border border-[#16253b] rounded-2xl p-6 flex flex-col gap-4 shadow-[0_16px_45px_rgba(0,0,0,0.8)]">
           <div className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-[#16253b] pb-3">
             <Trophy className="w-4 h-4 text-[#f59e0b]" />
