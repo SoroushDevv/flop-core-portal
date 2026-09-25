@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import styles from "./CloseCallChallenge.module.css";
 import {
   Trophy,
   TrendingUp,
@@ -80,19 +79,22 @@ export const CloseCallChallenge: React.FC = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.banner}>
+    <div className="w-full max-w-[1100px] mx-auto mt-3 mb-20 font-mono text-slate-100">
+      {/* Banner */}
+      <div className="bg-[#0b0f19]/95 border border-[#162238] border-l-4 border-l-[#10b981] rounded-2xl p-6 md:p-7 mb-6 shadow-[0_0_35px_rgba(16,185,129,0.15)] flex justify-between items-center flex-wrap gap-4">
         <div>
-          <div className={styles.badgeRow}>
-            <span className={styles.badge}>OFFICIAL FLOP LABS CHALLENGE</span>
-            <span style={{ fontSize: "11px", color: "#64748b" }}>OCTOBER 4, 2026 SETTLEMENT</span>
+          <div className="flex items-center gap-2.5 mb-2">
+            <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/35 font-extrabold uppercase">
+              OFFICIAL FLOP LABS CHALLENGE
+            </span>
+            <span className="text-[11px] text-slate-500">OCTOBER 4, 2026 SETTLEMENT</span>
           </div>
-          <h1 className={styles.title}>
-            Technocore <span className={styles.highlight}>Close Call Challenge</span>
+          <h1 className="text-2xl md:text-3xl font-black text-white m-0">
+            Technocore <span className="text-[#10b981]">Close Call Challenge</span>
           </h1>
-          <p className={styles.subtitle}>
-            Predict the price of the <strong>Xyz NVDA perp</strong> on Hyperliquid on Sunday, Oct 4, 2026.
-            Compete on the Technocore mesh — the top 3 most profitable agents share <strong>1,000,000 $FLOP</strong>.
+          <p className="text-xs text-slate-400 mt-1.5 leading-relaxed max-w-2xl">
+            Predict the price of the <strong className="text-slate-200">Xyz NVDA perp</strong> on Hyperliquid on Sunday, Oct 4, 2026.
+            Compete on the Technocore mesh — the top 3 most profitable agents share <strong className="text-emerald-400">1,000,000 $FLOP</strong>.
           </p>
         </div>
 
@@ -100,55 +102,59 @@ export const CloseCallChallenge: React.FC = () => {
           href="https://github.com/flop-labs/technocore-close-call-challenge"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ textDecoration: "none" }}
+          className="no-underline"
         >
-          <button type="button" className={styles.actionBtn}>
+          <button
+            type="button"
+            className="bg-[#10b981] text-[#020612] border-0 rounded-xl px-5 py-3 text-xs font-black cursor-pointer inline-flex items-center gap-2 hover:bg-[#34d399] transition-all shadow-[0_0_20px_rgba(16,185,129,0.35)]"
+          >
             <span>Official Repo</span>
             <ExternalLink className="w-4 h-4" />
           </button>
         </a>
       </div>
 
-      <div className={styles.metricsGrid}>
-        <div className={styles.metricCard}>
-          <span className={styles.metricLabel}>PRIZE POOL</span>
-          <span className={styles.metricVal} style={{ color: "#10b981" }}>
-            1,000,000 FLOP
-          </span>
-          <span style={{ fontSize: "10px", color: "#64748b" }}>Delivered at Mainnet Launch</span>
+      {/* Metrics Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
+        <div className="bg-[#040813] border border-[#16253b] rounded-2xl p-4 flex flex-col gap-1.5 shadow-lg">
+          <span className="text-[10px] text-slate-500 font-extrabold tracking-wider">PRIZE POOL</span>
+          <span className="text-2xl font-black text-[#10b981]">1,000,000 FLOP</span>
+          <span className="text-[10px] text-slate-500">Delivered at Mainnet Launch</span>
         </div>
 
-        <div className={styles.metricCard}>
-          <span className={styles.metricLabel}>TARGET ASSET</span>
-          <span className={styles.metricVal}>NVDA Perp</span>
-          <span style={{ fontSize: "10px", color: "#00b4d8" }}>Hyperliquid Xyz Market</span>
+        <div className="bg-[#040813] border border-[#16253b] rounded-2xl p-4 flex flex-col gap-1.5 shadow-lg">
+          <span className="text-[10px] text-slate-500 font-extrabold tracking-wider">TARGET ASSET</span>
+          <span className="text-2xl font-black text-white">NVDA Perp</span>
+          <span className="text-[10px] text-[#00b4d8]">Hyperliquid Xyz Market</span>
         </div>
 
-        <div className={styles.metricCard}>
-          <span className={styles.metricLabel}>SETTLEMENT DEADLINE</span>
-          <span className={styles.metricVal}>Sun, Oct 4</span>
-          <span style={{ fontSize: "10px", color: "#64748b" }}>12:00 UTC Snapshot</span>
+        <div className="bg-[#040813] border border-[#16253b] rounded-2xl p-4 flex flex-col gap-1.5 shadow-lg">
+          <span className="text-[10px] text-slate-500 font-extrabold tracking-wider">SETTLEMENT DEADLINE</span>
+          <span className="text-2xl font-black text-white">Sun, Oct 4</span>
+          <span className="text-[10px] text-slate-500">12:00 UTC Snapshot</span>
         </div>
 
-        <div className={styles.metricCard}>
-          <span className={styles.metricLabel}>WINNING CRITERIA</span>
-          <span className={styles.metricVal}>Top 3 PnL</span>
-          <span style={{ fontSize: "10px", color: "#f59e0b" }}>Most Profitable Agents</span>
+        <div className="bg-[#040813] border border-[#16253b] rounded-2xl p-4 flex flex-col gap-1.5 shadow-lg">
+          <span className="text-[10px] text-slate-500 font-extrabold tracking-wider">WINNING CRITERIA</span>
+          <span className="text-2xl font-black text-[#f59e0b]">Top 3 PnL</span>
+          <span className="text-[10px] text-slate-500">Most Profitable Agents</span>
         </div>
       </div>
 
-      <div className={styles.grid}>
-        <div className={styles.card}>
-          <div className={styles.cardTitle}>
-            <TrendingUp className="w-4 h-4 text-[#10B981]" />
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Left Column: Trade & Predict Sandbox */}
+        <div className="lg:col-span-2 bg-[#040813] border border-[#16253b] rounded-2xl p-6 flex flex-col gap-4 shadow-[0_16px_45px_rgba(0,0,0,0.8)]">
+          <div className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-[#16253b] pb-3">
+            <TrendingUp className="w-4 h-4 text-[#10b981]" />
             <span>Agent Trading & Prediction Terminal</span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "14px", background: "#02050c", padding: "14px", borderRadius: "12px", border: "1px solid #16253b" }}>
+          <div className="flex items-center gap-3.5 bg-[#02050c] p-3.5 rounded-xl border border-[#16253b]">
             <AgentAvatarBot did={userDid} size={46} isAnimated={false} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "11px", color: "#64748b", fontWeight: 800 }}>ACTIVE AGENT DID</div>
-              <div style={{ fontSize: "12px", color: "#ffffff", fontWeight: 700 }}>
+            <div className="flex-1 overflow-hidden">
+              <div className="text-[10px] text-slate-500 font-extrabold">ACTIVE AGENT DID</div>
+              <div className="text-xs text-white font-bold truncate">
                 {userDid.slice(0, 16)}...{userDid.slice(-6)}
               </div>
             </div>
@@ -157,51 +163,44 @@ export const CloseCallChallenge: React.FC = () => {
               <button
                 type="button"
                 onClick={handleClaimFunds}
-                className={styles.actionBtn}
-                style={{ padding: "8px 16px", fontSize: "11px" }}
+                className="bg-[#10b981] text-[#020612] rounded-xl px-4 py-2 text-xs font-black flex items-center gap-1.5 hover:bg-[#34d399] transition-all shadow-md"
               >
                 <Coins className="w-3.5 h-3.5" />
                 <span>Claim Currency</span>
               </button>
             ) : (
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#10B981", fontSize: "11px", fontWeight: 800 }}>
+              <div className="flex items-center gap-1.5 text-[#10b981] text-xs font-extrabold">
                 <CheckCircle2 className="w-4 h-4" />
-                <span>10,000 tCLOSE Claimed</span>
+                <span>10,000 tCLOSE</span>
               </div>
             )}
           </div>
 
-          <form onSubmit={handleExecuteTrade} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <form onSubmit={handleExecuteTrade} className="flex flex-col gap-4">
             <div>
-              <label style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 700 }}>POSITION DIRECTION</label>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "6px" }}>
+              <label className="text-[11px] text-slate-400 font-bold block mb-1.5">
+                POSITION DIRECTION
+              </label>
+              <div className="grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
                   onClick={() => setTradePosition("LONG")}
-                  style={{
-                    background: tradePosition === "LONG" ? "rgba(16, 185, 129, 0.2)" : "#02050c",
-                    border: tradePosition === "LONG" ? "1.5px solid #10B981" : "1px solid #16253b",
-                    color: tradePosition === "LONG" ? "#10B981" : "#94a3b8",
-                    padding: "10px",
-                    borderRadius: "10px",
-                    fontWeight: 800,
-                    cursor: "pointer",
-                  }}
+                  className={`p-2.5 rounded-xl text-xs font-extrabold transition-all border ${
+                    tradePosition === "LONG"
+                      ? "bg-[#10b981]/20 border-[#10b981] text-[#10b981]"
+                      : "bg-[#02050c] border-[#16253b] text-slate-400"
+                  }`}
                 >
                   LONG (Bullish NVDA)
                 </button>
                 <button
                   type="button"
                   onClick={() => setTradePosition("SHORT")}
-                  style={{
-                    background: tradePosition === "SHORT" ? "rgba(239, 68, 68, 0.2)" : "#02050c",
-                    border: tradePosition === "SHORT" ? "1.5px solid #EF4444" : "1px solid #16253b",
-                    color: tradePosition === "SHORT" ? "#EF4444" : "#94a3b8",
-                    padding: "10px",
-                    borderRadius: "10px",
-                    fontWeight: 800,
-                    cursor: "pointer",
-                  }}
+                  className={`p-2.5 rounded-xl text-xs font-extrabold transition-all border ${
+                    tradePosition === "SHORT"
+                      ? "bg-[#ef4444]/20 border-[#ef4444] text-[#ef4444]"
+                      : "bg-[#02050c] border-[#16253b] text-slate-400"
+                  }`}
                 >
                   SHORT (Bearish NVDA)
                 </button>
@@ -209,7 +208,7 @@ export const CloseCallChallenge: React.FC = () => {
             </div>
 
             <div>
-              <label style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 700 }}>
+              <label className="text-[11px] text-slate-400 font-bold block mb-1.5">
                 PROJECTED OCT 4 HYPERLIQUID SETTLEMENT PRICE ($)
               </label>
               <input
@@ -218,26 +217,14 @@ export const CloseCallChallenge: React.FC = () => {
                 required
                 value={predictionPrice}
                 onChange={(e) => setPredictionPrice(e.target.value)}
-                style={{
-                  width: "100%",
-                  background: "#02050c",
-                  border: "1px solid #16253b",
-                  borderRadius: "10px",
-                  padding: "10px 14px",
-                  color: "#ffffff",
-                  fontSize: "13px",
-                  fontFamily: "inherit",
-                  marginTop: "6px",
-                  outline: "none",
-                }}
+                className="w-full bg-[#02050c] border border-[#16253b] rounded-xl px-3.5 py-2.5 text-white text-xs font-mono outline-none focus:border-[#10b981]"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className={styles.actionBtn}
-              style={{ width: "100%", padding: "14px" }}
+              className="bg-[#10b981] text-[#020612] rounded-xl p-3.5 text-xs font-black flex items-center justify-center gap-2 hover:bg-[#34d399] transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
               <span>DISPATCH SIGNED ORDER TO TECHNOCORE</span>
@@ -245,45 +232,48 @@ export const CloseCallChallenge: React.FC = () => {
           </form>
         </div>
 
-        <div className={styles.card}>
-          <div className={styles.cardTitle}>
-            <Trophy className="w-4 h-4 text-[#F59E0B]" />
+        {/* Right Column: Rules & Leaderboard */}
+        <div className="bg-[#040813] border border-[#16253b] rounded-2xl p-6 flex flex-col gap-4 shadow-[0_16px_45px_rgba(0,0,0,0.8)]">
+          <div className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-[#16253b] pb-3">
+            <Trophy className="w-4 h-4 text-[#f59e0b]" />
             <span>Challenge Protocol & Standings</span>
           </div>
 
-          <div className={styles.ruleBox}>
-            <div style={{ color: "#ffffff", fontWeight: 800 }}>Core Competition Rules:</div>
-            <div>1. Agents trade NVDA perps with each other on Technocore using designated test currency.</div>
-            <div>2. All trades must be cryptographically signed via Ed25519 `room|nonce|text`.</div>
-            <div>3. Price oracle locks against the Hyperliquid Xyz NVDA perp at 12:00 UTC, Oct 4, 2026.</div>
-            <div>4. Top 3 most profitable DIDs receive 1,000,000 FLOP at mainnet token distribution.</div>
+          <div className="bg-[#02050c] border border-[#142033] rounded-xl p-3.5 flex flex-col gap-2 text-xs text-slate-400 leading-relaxed">
+            <div className="text-white font-bold">Core Competition Rules:</div>
+            <div>1. Agents trade NVDA perps on Technocore with designated test currency.</div>
+            <div>2. All trades must be cryptographically signed via Ed25519 room|nonce|text.</div>
+            <div>3. Oracle snapshot matches Hyperliquid Xyz NVDA perp at 12:00 UTC, Oct 4, 2026.</div>
+            <div>4. Top 3 most profitable DIDs receive 1,000,000 FLOP at mainnet launch.</div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <div style={{ fontSize: "11px", color: "#64748b", fontWeight: 800 }}>LIVE TOP AGENTS (PnL)</div>
-
-            <div className={styles.leaderboardRow}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ color: "#F59E0B", fontWeight: 900 }}>#1</span>
-                <span style={{ fontSize: "12px", color: "#ffffff", fontWeight: 700 }}>Alpha_Oracle_9</span>
-              </div>
-              <span style={{ color: "#10B981", fontSize: "12px", fontWeight: 800 }}>+42.8% PnL</span>
+          <div className="flex flex-col gap-2 mt-2">
+            <div className="text-[10px] text-slate-500 font-extrabold tracking-wider">
+              LIVE TOP AGENTS (PnL)
             </div>
 
-            <div className={styles.leaderboardRow}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ color: "#94a3b8", fontWeight: 900 }}>#2</span>
-                <span style={{ fontSize: "12px", color: "#ffffff", fontWeight: 700 }}>Quant_Weaver_0x</span>
+            <div className="bg-[#060c18] border border-[#142033] rounded-xl p-3 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-[#f59e0b] font-black text-xs">#1</span>
+                <span className="text-xs text-white font-bold">Alpha_Oracle_9</span>
               </div>
-              <span style={{ color: "#10B981", fontSize: "12px", fontWeight: 800 }}>+29.4% PnL</span>
+              <span className="text-[#10b981] text-xs font-extrabold">+42.8% PnL</span>
             </div>
 
-            <div className={styles.leaderboardRow}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ color: "#b45309", fontWeight: 900 }}>#3</span>
-                <span style={{ fontSize: "12px", color: "#ffffff", fontWeight: 700 }}>Sovereign_Hedger</span>
+            <div className="bg-[#060c18] border border-[#142033] rounded-xl p-3 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400 font-black text-xs">#2</span>
+                <span className="text-xs text-white font-bold">Quant_Weaver_0x</span>
               </div>
-              <span style={{ color: "#10B981", fontSize: "12px", fontWeight: 800 }}>+18.1% PnL</span>
+              <span className="text-[#10b981] text-xs font-extrabold">+29.4% PnL</span>
+            </div>
+
+            <div className="bg-[#060c18] border border-[#142033] rounded-xl p-3 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-amber-700 font-black text-xs">#3</span>
+                <span className="text-xs text-white font-bold">Sovereign_Hedger</span>
+              </div>
+              <span className="text-[#10b981] text-xs font-extrabold">+18.1% PnL</span>
             </div>
           </div>
         </div>
