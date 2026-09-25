@@ -16,7 +16,12 @@ import {
 } from "lucide-react";
 import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
 import { botSpeak } from "@/lib/botUtils";
-import { dispatchSignedMainnetMessage, fetchMainnetRoomMessages, LiveMessage } from "@/lib/technocoreLive";
+import {
+  dispatchSignedMainnetMessage,
+  fetchMainnetRoomMessages,
+  cleanDidKey,
+  LiveMessage,
+} from "@/lib/technocoreLive";
 
 interface AgentDecision {
   targetPrice: number;
@@ -32,29 +37,23 @@ export const CloseCallChallenge: React.FC = () => {
   );
   const [userSeed, setUserSeed] = useState<string>("");
 
-  // Live Market Data from Hyperliquid
   const [liveNvdaPrice, setLiveNvdaPrice] = useState<number>(0);
   const [priceLoading, setPriceLoading] = useState<boolean>(true);
   const [lastPriceTime, setLastPriceTime] = useState<string>("");
 
-  // Token Mint Status
   const [isMinted, setIsMinted] = useState<boolean>(false);
   const [isMinting, setIsMinting] = useState<boolean>(false);
   const [mintTxSeq, setMintTxSeq] = useState<string>("");
 
-  // Autonomous Agent Decision State
   const [agentDecision, setAgentDecision] = useState<AgentDecision | null>(null);
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
   const [evaluationStep, setEvaluationStep] = useState<string>("");
 
-  // Submission State
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submittedTxSeq, setSubmittedTxSeq] = useState<string>("");
 
-  // Live Technocore Challenge Feed
   const [liveChallengeTrades, setLiveChallengeTrades] = useState<LiveMessage[]>([]);
 
-  // 1. Fetch Real Hyperliquid Mid-Price
   const fetchLiveHyperliquidPrice = async () => {
     setPriceLoading(true);
     try {
@@ -73,7 +72,6 @@ export const CloseCallChallenge: React.FC = () => {
     }
   };
 
-  // 2. Fetch Live Challenge Transactions from technocore.chat
   const fetchLiveTrades = async () => {
     try {
       const res = await fetchMainnetRoomMessages("mb-sonnet-2-discovery");
@@ -90,7 +88,11 @@ export const CloseCallChallenge: React.FC = () => {
     if (typeof window !== "undefined") {
       const storedDid = localStorage.getItem("flop_active_did");
       const storedSeed = localStorage.getItem("flop_active_seed");
-      if (storedDid) setUserDid(storedDid);
+      if (storedDid) {
+        const cleaned = cleanDidKey(storedDid);
+        setUserDid(cleaned);
+        localStorage.setItem("flop_active_did", cleaned);
+      }
       if (storedSeed) setUserSeed(storedSeed);
 
       const savedMintSeq = localStorage.getItem("flop_polf_mint_seq");
@@ -112,16 +114,13 @@ export const CloseCallChallenge: React.FC = () => {
     };
   }, []);
 
-  // 3. Official POLF Token Mint Transaction
   const handleMintPolfTokens = async () => {
     if (!userSeed || !userDid) {
       botSpeak("Please mint or import your DID with private seed in DID Generator first!", "error", 4000);
       return;
     }
 
-    // Strip duplicate prefix to obtain canonical did
-    const bareDid = userDid.replace(/^(did:key:)+/i, "").trim();
-    const canonicalDid = `did:key:${bareDid}`;
+    const canonicalDid = cleanDidKey(userDid);
 
     setIsMinting(true);
     botSpeak("Broadcasting signed POLF Mint transaction to Technocore...", "info", 2500);
@@ -130,7 +129,7 @@ export const CloseCallChallenge: React.FC = () => {
 
     const res = await dispatchSignedMainnetMessage(
       "mb-sonnet-2-discovery",
-      bareDid,
+      canonicalDid,
       userSeed,
       mintPayload
     );
@@ -148,7 +147,6 @@ export const CloseCallChallenge: React.FC = () => {
     setIsMinting(false);
   };
 
-  // 4. Autonomous Agent Reasoning Engine
   const triggerAgentPrediction = async () => {
     if (liveNvdaPrice === 0) {
       botSpeak("Waiting for live Hyperliquid oracle feed...", "error");
@@ -203,7 +201,6 @@ export const CloseCallChallenge: React.FC = () => {
     );
   };
 
-  // 5. Broadcast Order to Mesh
   const broadcastAgentDecision = async () => {
     if (!isMinted) {
       botSpeak("You must mint the 10,000 POLF allocation first before broadcasting orders!", "error", 4000);
@@ -219,14 +216,12 @@ export const CloseCallChallenge: React.FC = () => {
     setIsSubmitting(true);
     botSpeak("Agent signing order with Ed25519 key...", "info", 2000);
 
-    const bareDid = userDid.replace(/^(did:key:)+/i, "").trim();
-    const canonicalDid = `did:key:${bareDid}`;
-
+    const canonicalDid = cleanDidKey(userDid);
     const payload = `CLOSE_CALL|CONTEST:close-1|PAIR:xyz:NVDA|SIDE:${agentDecision.direction}|PRICE:${agentDecision.targetPrice}|POLF:10000|EXPIRY:2026-10-04T10:00:00Z|DID:${canonicalDid}`;
 
     const res = await dispatchSignedMainnetMessage(
       "mb-sonnet-2-discovery",
-      bareDid,
+      canonicalDid,
       userSeed,
       payload
     );
@@ -316,7 +311,7 @@ export const CloseCallChallenge: React.FC = () => {
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Left Column: Mint Allocation & Inference */}
+        {/* Left Column */}
         <div className="lg:col-span-2 bg-[#040813] border border-[#16253b] rounded-2xl p-6 flex flex-col gap-5 shadow-[0_16px_45px_rgba(0,0,0,0.8)]">
           <div className="flex justify-between items-center border-b border-[#16253b] pb-3">
             <div className="text-sm font-extrabold text-white flex items-center gap-2">
@@ -460,7 +455,7 @@ export const CloseCallChallenge: React.FC = () => {
           )}
         </div>
 
-        {/* Right Column: Genuine Technocore Contest Feed & Protocol Rules */}
+        {/* Right Column */}
         <div className="bg-[#040813] border border-[#16253b] rounded-2xl p-6 flex flex-col gap-4 shadow-[0_16px_45px_rgba(0,0,0,0.8)]">
           <div className="text-sm font-extrabold text-white flex items-center gap-2 border-b border-[#16253b] pb-3">
             <Trophy className="w-4 h-4 text-[#f59e0b]" />
@@ -475,7 +470,6 @@ export const CloseCallChallenge: React.FC = () => {
             <div>4. Final scores lock at the last xyz:NVDA trade before 10:00:00 UTC on Sunday, Oct 4, 2026.</div>
           </div>
 
-          {/* Live Trades Stream from Network */}
           <div className="flex flex-col gap-2 mt-2 flex-1">
             <div className="flex justify-between items-center text-[10px] text-slate-500 font-extrabold tracking-wider">
               <span>LIVE PARTICIPATING AGENTS</span>

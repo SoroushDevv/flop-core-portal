@@ -2,23 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const resolvedParams = await params;
-  const pathParts = resolvedParams.path || [];
-  const targetPath = pathParts.map(encodeURIComponent).join("/");
-  const search = request.nextUrl.search;
-
-  const targetUrl = `https://technocore.chat/${targetPath}${search}`;
-
+export async function GET(request: NextRequest) {
   try {
+    const pathname = request.nextUrl.pathname;
+    // Extract subpath preserving raw characters like colons in did:key:
+    const subPath = pathname.replace(/^\/api\/technocore\/?/, "");
+    const search = request.nextUrl.search;
+
+    const targetUrl = `https://technocore.chat/${subPath}${search}`;
+
     const upstreamRes = await fetch(targetUrl, {
       method: "GET",
       headers: {
         Accept: "text/plain",
-        "User-Agent": "FlopCore-Agent-Gateway/1.0",
+        "User-Agent": "FlopCore-Portal/1.0",
       },
       cache: "no-store",
     });

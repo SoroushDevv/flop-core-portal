@@ -57,6 +57,20 @@ export function bytesToHex(bytes: Uint8Array): string {
     .join("");
 }
 
+/**
+ * Sanitizes any raw DID string into standard "did:key:z6Mk..."
+ * Removes duplicate prefixes like "did:key:did:key:"
+ */
+export function cleanDidKey(raw: string): string {
+  if (!raw) return "";
+  const match = raw.match(/z6Mk[1-9A-HJ-NP-Za-km-z]{44,52}/);
+  if (match) {
+    return `did:key:${match[0]}`;
+  }
+  const stripped = raw.replace(/^(did:key:)+/gi, "").trim();
+  return `did:key:${stripped}`;
+}
+
 export interface GeneratedIdentity {
   did: string;
   seedHex: string;
@@ -162,7 +176,7 @@ export async function fetchMainnetRoomMessages(
 
 /**
  * Dispatches a cryptographically signed message to Technocore Mainnet/Testnet
- * Endpoint: GET /r/{room}/say-signed/{bare_did}/{sig}/{nonce}/{text}
+ * Endpoint: GET /r/{room}/say-signed/{canonicalDid}/{sig}/{nonce}/{text}
  */
 export async function dispatchSignedMainnetMessage(
   room: string,
@@ -174,8 +188,8 @@ export async function dispatchSignedMainnetMessage(
     const cleanText = rawText.replace(/[\r\n\t]/g, " ").trim();
     if (!cleanText) return { success: false, error: "Empty message text" };
 
-    // Strip ALL occurrences of "did:key:" so only bare base58 identifier (e.g. z6Mk...) remains in the URL
-    const bareDid = rawDid.replace(/^(did:key:)+/i, "").trim();
+    // Standardize DID format
+    const canonicalDid = cleanDidKey(rawDid);
 
     const nonce = Date.now().toString();
 
@@ -210,10 +224,8 @@ export async function dispatchSignedMainnetMessage(
 
     const sigBase64Url = base64UrlEncode(new Uint8Array(sigBuffer));
 
-    // Notice: bareDid is used here because Technocore server prepends "did:key:" automatically
-    const endpoint = `${PROXY_BASE}/r/${encodeURIComponent(room)}/say-signed/${encodeURIComponent(
-      bareDid
-    )}/${encodeURIComponent(sigBase64Url)}/${nonce}/${encodeURIComponent(cleanText)}`;
+    // Endpoint with canonical did:key:z6Mk...
+    const endpoint = `${PROXY_BASE}/r/${encodeURIComponent(room)}/say-signed/${canonicalDid}/${sigBase64Url}/${nonce}/${encodeURIComponent(cleanText)}`;
 
     const res = await fetch(endpoint, {
       method: "GET",
