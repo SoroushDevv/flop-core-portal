@@ -1,9 +1,20 @@
+export type BotMessageType = "info" | "success" | "error" | "warning";
+
 export interface BotEvent {
   id: string;
   text: string;
-  type: "info" | "success" | "error";
+  type: BotMessageType;
   duration: number;
   timestamp: number;
+}
+
+// Backward compatibility alias for CyberBotAssistant
+export interface BotMessagePayload {
+  id?: string;
+  text: string;
+  type?: BotMessageType;
+  duration?: number;
+  timestamp?: number;
 }
 
 type Listener = (event: BotEvent | null) => void;
@@ -28,7 +39,7 @@ class BotStateManager {
     this.listeners.forEach((l) => l(event));
   }
 
-  speak(text: string, type: "info" | "success" | "error" = "info", duration = 4000) {
+  speak(text: string, type: BotMessageType = "info", duration = 4000) {
     if (this.timer) {
       clearTimeout(this.timer);
     }
@@ -53,7 +64,7 @@ export const botState = new BotStateManager();
 
 export function botSpeak(
   text: string,
-  type: "info" | "success" | "error" = "info",
+  type: BotMessageType = "info",
   duration = 4000
 ) {
   botState.speak(text, type, duration);
