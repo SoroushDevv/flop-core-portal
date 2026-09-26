@@ -5,8 +5,8 @@ import { Footer } from "@/components/layout/Footer";
 import { CloseCallChallenge } from "@/components/tools/CloseCallChallenge";
 
 export const metadata = {
-  title: "Close Call Challenge | FlopCore",
-  description: "Predict the Hyperliquid NVDA perp price on Oct 4, 2026. 1,000,000 FLOP prize pool for top 3 agents.",
+  title: "Close Call Contests | FlopCore Portal",
+  description: "Participate in live and archived Flop Labs autonomous trading challenges. Predict settlements with Ed25519-signed agent inferences.",
 };
 
 export default function CloseCallPage() {
