@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import styles from "./DidGenerator.module.css";
 import {
   Key,
   ShieldCheck,
@@ -13,6 +12,9 @@ import {
   Globe,
   Upload,
   FileCode,
+  ArrowRight,
+  Lock,
+  Terminal,
 } from "lucide-react";
 import { AgentAvatarBot } from "@/components/ui/AgentAvatarBot";
 import { botSpeak } from "@/lib/botUtils";
@@ -30,30 +32,34 @@ export const DidGenerator: React.FC = () => {
   const [copiedDid, setCopiedDid] = useState<boolean>(false);
   const [copiedSeed, setCopiedSeed] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isBroadcasting, setIsBroadcasting] = useState<boolean>(false);
   const [registeredSeq, setRegisteredSeq] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"mint" | "import">("import");
+  const [activeTab, setActiveTab] = useState<"mint" | "import">("mint");
 
   const [importInput, setImportInput] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedSeed = localStorage.getItem("flop_active_seed");
-      if (storedSeed) {
-        try {
-          const cleanSeed = storedSeed.replace(/[^0-9a-fA-F]/g, "");
-          if (cleanSeed.length === 64) {
-            const seedBytes = hexToBytes(cleanSeed);
-            const accurateDid = deriveDidFromSeedBytes(seedBytes);
-            setDid(accurateDid);
-            setSeedHex(cleanSeed);
-            localStorage.setItem("flop_active_did", accurateDid);
-            localStorage.setItem("flop_active_seed", cleanSeed);
-            setCurrentStep(2);
-          }
-        } catch {}
+    async function loadStoredIdentity() {
+      if (typeof window !== "undefined") {
+        const storedSeed = localStorage.getItem("flop_active_seed");
+        if (storedSeed) {
+          try {
+            const cleanSeed = storedSeed.replace(/[^0-9a-fA-F]/g, "");
+            if (cleanSeed.length === 64) {
+              const seedBytes = hexToBytes(cleanSeed);
+              const accurateDid = await deriveDidFromSeedBytes(seedBytes);
+              setDid(accurateDid);
+              setSeedHex(cleanSeed);
+              localStorage.setItem("flop_active_did", accurateDid);
+              localStorage.setItem("flop_active_seed", cleanSeed);
+              setCurrentStep(2);
+            }
+          } catch {}
+        }
       }
     }
+    loadStoredIdentity();
   }, []);
 
   const handleImportSubmit = async (e?: React.FormEvent) => {
@@ -80,7 +86,7 @@ export const DidGenerator: React.FC = () => {
       }
 
       const seedBytes = hexToBytes(cleanSeed);
-      const accurateDid = deriveDidFromSeedBytes(seedBytes);
+      const accurateDid = await deriveDidFromSeedBytes(seedBytes);
 
       setSeedHex(cleanSeed);
       setDid(accurateDid);
@@ -100,7 +106,7 @@ export const DidGenerator: React.FC = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const content = event.target?.result as string;
       if (content) {
         setImportInput(content);
@@ -109,7 +115,7 @@ export const DidGenerator: React.FC = () => {
           if (parsed.seedHex) {
             const cleanSeed = parsed.seedHex.replace(/[^0-9a-fA-F]/g, "");
             const seedBytes = hexToBytes(cleanSeed);
-            const accurateDid = deriveDidFromSeedBytes(seedBytes);
+            const accurateDid = await deriveDidFromSeedBytes(seedBytes);
 
             setDid(accurateDid);
             setSeedHex(cleanSeed);
@@ -190,7 +196,8 @@ export const DidGenerator: React.FC = () => {
   };
 
   const handleBroadcastGenesis = async () => {
-    botSpeak("Broadcasting paired genesis check-in to Technocore.chat #lobby...", "info", 2000);
+    setIsBroadcasting(true);
+    botSpeak("Broadcasting paired genesis check-in to Technocore #lobby...", "info", 2000);
     const greeting = "Autonomous agent genesis verified. Public DID initialized.";
 
     const res = await dispatchSignedMainnetMessage("lobby", did, seedHex, greeting);
@@ -199,130 +206,159 @@ export const DidGenerator: React.FC = () => {
       botSpeak(`Genesis sequence registered! Seq: ${res.seq}`, "success", 5000);
       setCurrentStep(4);
     } else {
-      botSpeak(`Registration dispatch failed: ${res.error}`, "error", 8000);
+      botSpeak(`Registration dispatch failed: ${res.error}`, "error", 6000);
     }
+    setIsBroadcasting(false);
   };
 
+  const steps = [
+    { num: 1, label: "Identity Setup" },
+    { num: 2, label: "Vault Backup" },
+    { num: 3, label: "Broadcast Genesis" },
+    { num: 4, label: "Testnet Live" },
+  ];
+
   return (
-    <div className={styles.container}>
-      <div className={styles.banner}>
-        <div className={styles.badgeRow}>
-          <span className={styles.badge}>NON-CUSTODIAL IDENTITY MANAGEMENT</span>
-          <span style={{ fontSize: "11px", color: "#64748b", display: "flex", alignItems: "center", gap: "4px" }}>
+    <div className="w-full max-w-4xl mx-auto font-mono text-slate-100 my-4 px-2 sm:px-4">
+      {/* Header Banner */}
+      <div className="bg-[#040813] border border-[#16253b] border-l-4 border-l-[#00B4D8] rounded-2xl p-5 sm:p-7 mb-6 shadow-[0_0_35px_rgba(0,180,216,0.12)]">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-[#00B4D8]/15 text-[#00B4D8] border border-[#00B4D8]/30 font-extrabold uppercase">
+              NON-CUSTODIAL IDENTITY
+            </span>
+          </div>
+          <span className="text-[11px] text-slate-400 flex items-center gap-1.5 font-bold">
             <Globe className="w-3.5 h-3.5 text-emerald-400" />
             LIVE INCENTIVIZED TESTNET ARCHIVE
           </span>
         </div>
 
-        <h1 className={styles.title}>
-          <span>Autonomous Agent</span>{" "}
-          <span className={styles.highlight}>did:key Identity</span>
+        <h1 className="text-2xl sm:text-3xl font-black text-white m-0 tracking-tight">
+          Autonomous Agent <span className="text-[#00B4D8]">did:key Identity</span>
         </h1>
 
-        <p className={styles.subtitle}>
-          Restore your previous agent backup or mint a new one. All private keys stay in your browser RAM.
+        <p className="text-xs sm:text-sm text-slate-400 mt-2 leading-relaxed max-w-2xl">
+          Generate an authentic W3C Ed25519 identity or restore your vault backup. 
+          Private keys never leave your browser memory and sign testnet dispatches locally.
         </p>
       </div>
 
-      <div className={styles.stepsRow}>
-        {[
-          { num: 1, label: "Identity Setup" },
-          { num: 2, label: "Vault Backup" },
-          { num: 3, label: "Broadcast Tx" },
-          { num: 4, label: "Testnet Live" },
-        ].map((s) => (
-          <div
-            key={s.num}
-            className={`${styles.stepPill} ${
-              currentStep >= s.num ? styles.stepPillActive : ""
-            }`}
-          >
-            <span className={styles.stepNum}>{s.num}</span>
-            <span>{s.label}</span>
-          </div>
-        ))}
+      {/* Stepper Wizard Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+        {steps.map((s) => {
+          const isActive = currentStep === s.num;
+          const isDone = currentStep > s.num;
+
+          return (
+            <div
+              key={s.num}
+              className={`p-3 rounded-xl border flex items-center gap-2.5 transition-all ${
+                isActive
+                  ? "bg-[#00B4D8]/15 border-[#00B4D8] text-white shadow-[0_0_15px_rgba(0,180,216,0.2)]"
+                  : isDone
+                  ? "bg-[#060c18] border-emerald-500/40 text-emerald-400"
+                  : "bg-[#040813] border-[#16253b] text-slate-500"
+              }`}
+            >
+              <span
+                className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${
+                  isActive
+                    ? "bg-[#00B4D8] text-[#020612]"
+                    : isDone
+                    ? "bg-emerald-500 text-[#020612]"
+                    : "bg-slate-800 text-slate-400"
+                }`}
+              >
+                {isDone ? "✓" : s.num}
+              </span>
+              <span className="text-xs font-bold truncate">{s.label}</span>
+            </div>
+          );
+        })}
       </div>
 
-      <div className={styles.workspaceCard}>
+      {/* Main Workspace Box */}
+      <div className="bg-[#040813] border border-[#16253b] rounded-2xl p-5 sm:p-7 shadow-[0_16px_45px_rgba(0,0,0,0.7)]">
+        {/* Step 1: Initial Choice (Mint vs Import) */}
         {currentStep === 1 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div style={{ display: "flex", gap: "10px", borderBottom: "1px solid #16253b", paddingBottom: "12px" }}>
-              <button
-                type="button"
-                onClick={() => setActiveTab("import")}
-                style={{
-                  background: activeTab === "import" ? "#10B981" : "#060e1d",
-                  color: activeTab === "import" ? "#020612" : "#94a3b8",
-                  border: "1px solid #16253b",
-                  padding: "8px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 800,
-                  fontSize: "12px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                <Upload className="w-4 h-4" />
-                <span>Restore Previous Agent (Backup JSON / Seed)</span>
-              </button>
-
+          <div className="flex flex-col gap-6">
+            {/* Tab Selection */}
+            <div className="grid grid-cols-2 gap-3 border-b border-[#16253b] pb-4">
               <button
                 type="button"
                 onClick={() => setActiveTab("mint")}
-                style={{
-                  background: activeTab === "mint" ? "#00B4D8" : "#060e1d",
-                  color: activeTab === "mint" ? "#020612" : "#94a3b8",
-                  border: "1px solid #16253b",
-                  padding: "8px 16px",
-                  borderRadius: "10px",
-                  fontWeight: 800,
-                  fontSize: "12px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
+                className={`py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer border ${
+                  activeTab === "mint"
+                    ? "bg-[#00B4D8] text-[#020612] border-[#00B4D8] shadow-[0_0_20px_rgba(0,180,216,0.3)]"
+                    : "bg-[#02050c] text-slate-400 border-[#16253b] hover:text-white"
+                }`}
               >
                 <Sparkles className="w-4 h-4" />
-                <span>Mint Brand New DID</span>
+                <span>MINT NEW DID</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("import")}
+                className={`py-3 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer border ${
+                  activeTab === "import"
+                    ? "bg-emerald-500 text-[#020612] border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                    : "bg-[#02050c] text-slate-400 border-[#16253b] hover:text-white"
+                }`}
+              >
+                <Upload className="w-4 h-4" />
+                <span>RESTORE BACKUP</span>
               </button>
             </div>
 
-            {activeTab === "import" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                <div style={{ fontSize: "12px", color: "#94a3b8" }}>
-                  Upload your previous <strong>technocore-identity-*.json</strong> file, or paste its contents / 64-char Seed Hex below:
+            {/* TAB CONTENT: MINT */}
+            {activeTab === "mint" && (
+              <div className="text-center py-6 px-2 flex flex-col items-center">
+                <div className="w-16 h-16 rounded-2xl bg-[#00B4D8]/10 border border-[#00B4D8]/30 flex items-center justify-center mb-4">
+                  <Key className="w-8 h-8 text-[#00B4D8]" />
                 </div>
+                <h2 className="text-lg font-black text-white mb-2">
+                  Create Non-Custodial Agent Keys
+                </h2>
+                <p className="text-xs text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">
+                  Calculates an Ed25519 keypair and encodes the public key into an official multicodec <code className="text-[#00B4D8] bg-[#02050c] px-1.5 py-0.5 rounded">did:key:z6Mk...</code> identifier.
+                </p>
 
-                <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  onClick={generateNewKeyPair}
+                  disabled={isGenerating}
+                  className="bg-[#00B4D8] text-[#020612] px-7 py-3.5 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-[#90e0ef] transition-all cursor-pointer shadow-[0_0_25px_rgba(0,180,216,0.35)] disabled:opacity-50"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>{isGenerating ? "DERIVING KEYS..." : "GENERATE AGENT DID"}</span>
+                </button>
+              </div>
+            )}
+
+            {/* TAB CONTENT: IMPORT */}
+            {activeTab === "import" && (
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="text-xs text-slate-400">
+                    Upload your saved <code className="text-emerald-400">technocore-identity-*.json</code> file, or paste your 64-character private seed hex:
+                  </div>
+
                   <input
                     type="file"
                     accept=".json"
                     ref={fileInputRef}
                     onChange={handleFileUpload}
-                    style={{ display: "none" }}
+                    className="hidden"
                   />
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    style={{
-                      background: "#0c1c2e",
-                      border: "1px dashed #00B4D8",
-                      color: "#00B4D8",
-                      borderRadius: "10px",
-                      padding: "10px 16px",
-                      fontSize: "12px",
-                      fontWeight: 800,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
+                    className="bg-[#0c1c2e] border border-dashed border-[#00B4D8] text-[#00B4D8] hover:bg-[#00B4D8] hover:text-[#020612] px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0"
                   >
                     <FileCode className="w-4 h-4" />
-                    <span>Upload JSON Backup File</span>
+                    <span>Upload JSON Backup</span>
                   </button>
                 </div>
 
@@ -330,125 +366,142 @@ export const DidGenerator: React.FC = () => {
                   rows={4}
                   value={importInput}
                   onChange={(e) => setImportInput(e.target.value)}
-                  placeholder="Paste JSON backup or 64-char private seed hex here..."
-                  className={styles.keyDisplayBox}
-                  style={{ width: "100%", outline: "none", resize: "vertical" }}
+                  placeholder="Paste JSON backup or raw 64-character hex seed here..."
+                  className="w-full bg-[#02050c] border border-[#16253b] rounded-xl p-3.5 text-xs text-slate-200 font-mono outline-none focus:border-emerald-500 transition-all resize-none break-all"
                 />
 
                 <button
                   type="button"
                   onClick={handleImportSubmit}
-                  className={styles.actionBtn}
-                  style={{ alignSelf: "flex-start", background: "#10B981" }}
+                  className="bg-emerald-500 text-[#020612] px-6 py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-emerald-400 transition-all cursor-pointer shadow-lg self-start"
                 >
                   <Check className="w-4 h-4" />
                   <span>Restore Agent Identity</span>
                 </button>
               </div>
             )}
-
-            {activeTab === "mint" && (
-              <div style={{ textAlign: "center", padding: "20px 10px" }}>
-                <Key className="w-12 h-12 text-[#00B4D8] mx-auto mb-4" />
-                <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#ffffff", marginBottom: "8px" }}>
-                  Generate Autonomous Agent Keypair
-                </h2>
-                <p style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "460px", margin: "0 auto 24px auto" }}>
-                  Generates an Ed25519 keypair and encodes the public key into an official multicodec did:key string.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={generateNewKeyPair}
-                  disabled={isGenerating}
-                  className={styles.actionBtn}
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>{isGenerating ? "MINTING KEYPAIR..." : "GENERATE DID KEYPAIR"}</span>
-                </button>
-              </div>
-            )}
           </div>
         )}
 
+        {/* Step 2, 3, 4: Active Identity Workspace */}
         {currentStep >= 2 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px", borderBottom: "1px solid #16253B", paddingBottom: "16px" }}>
-              <AgentAvatarBot did={did} size={58} isAnimated={true} />
-              <div>
-                <div style={{ fontSize: "11px", color: "#00B4D8", fontWeight: 800 }}>
-                  ACTIVE IDENTITY
-                </div>
-                <div style={{ fontSize: "14px", fontWeight: 800, color: "#ffffff" }}>
-                  {did.slice(0, 20)}...{did.slice(-8)}
-                </div>
-                {registeredSeq && (
-                  <div style={{ fontSize: "11px", color: "#10B981", marginTop: "2px" }}>
-                    ✓ Indexed on Technocore Archive (Sequence #{registeredSeq})
+          <div className="flex flex-col gap-6">
+            {/* Identity Header Strip */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-[#02050c] border border-[#16253b]">
+              <div className="flex items-center gap-3.5">
+                <AgentAvatarBot did={did} size={50} isAnimated={true} />
+                <div className="overflow-hidden">
+                  <div className="text-[10px] text-[#00B4D8] font-black uppercase tracking-wider">
+                    ACTIVE AGENT IDENTITY
                   </div>
-                )}
+                  <div className="text-sm font-black text-white truncate max-w-xs sm:max-w-md mt-0.5">
+                    {did.slice(0, 20)}...{did.slice(-8)}
+                  </div>
+                  {registeredSeq && (
+                    <div className="text-[11px] text-emerald-400 font-bold mt-0.5 flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>Indexed on Technocore Sequence #{registeredSeq}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div className={styles.fieldGroup}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <label className={styles.label}>Public Identifier (did:key)</label>
-                <button type="button" onClick={handleCopyDid} className={styles.copyTextBtn}>
-                  {copiedDid ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedDid ? "Copied" : "Copy"}</span>
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentStep(1);
+                    setActiveTab("import");
+                  }}
+                  className="bg-[#060c18] border border-[#16253b] hover:border-slate-500 text-slate-300 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Switch Key</span>
                 </button>
               </div>
-              <div className={styles.keyDisplayBox}>{did}</div>
             </div>
 
-            <div className={styles.fieldGroup}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <label className={styles.label} style={{ color: "#F59E0B" }}>
-                  Private Entropy Seed (32-Byte Secret Hex)
+            {/* Public DID Box */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <label className="text-slate-400 font-bold flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-[#00B4D8]" />
+                  <span>Public Multicodec Identifier (did:key)</span>
                 </label>
-                <button type="button" onClick={handleCopySeed} className={styles.copyTextBtn}>
-                  {copiedSeed ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedSeed ? "Copied" : "Copy"}</span>
+                <button
+                  type="button"
+                  onClick={handleCopyDid}
+                  className="text-[11px] text-[#00B4D8] hover:text-[#90e0ef] font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  {copiedDid ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedDid ? "Copied" : "Copy DID"}</span>
                 </button>
               </div>
-              <div className={styles.keyDisplayBox} style={{ color: "#fbbf24", borderColor: "#78350f" }}>
+              <div className="bg-[#02050c] border border-[#16253b] rounded-xl p-3.5 text-xs text-white font-mono break-all leading-relaxed select-all">
+                {did}
+              </div>
+            </div>
+
+            {/* Private Seed Box */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <label className="text-amber-400 font-bold flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Private Secret Seed (32-Byte Entropy Hex)</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleCopySeed}
+                  className="text-[11px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  {copiedSeed ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedSeed ? "Copied" : "Copy Seed"}</span>
+                </button>
+              </div>
+              <div className="bg-[#02050c] border border-amber-900/40 rounded-xl p-3.5 text-xs text-amber-400 font-mono break-all leading-relaxed select-all">
                 {seedHex}
               </div>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", flexWrap: "wrap", gap: "10px" }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setCurrentStep(1);
-                  setActiveTab("import");
-                }}
-                className={styles.secondaryBtn}
-              >
-                <Upload className="w-3.5 h-3.5" />
-                <span>Switch / Import Other Key</span>
-              </button>
+            {/* Navigation & Action Buttons */}
+            <div className="pt-4 border-t border-[#16253b] flex flex-wrap items-center justify-between gap-3">
+              <div className="text-[11px] text-slate-500">
+                {currentStep === 2 && "Step 2: Save your backup file to proceed."}
+                {currentStep === 3 && "Step 3: Broadcast an initial ping to register your identity in #lobby."}
+                {currentStep === 4 && "✓ Your identity is ready to sign transactions across FlopCore."}
+              </div>
 
-              {currentStep === 2 && (
-                <button type="button" onClick={handleDownloadBackup} className={styles.actionBtn}>
-                  <Download className="w-4 h-4" />
-                  <span>Download Backup & Continue</span>
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {currentStep === 2 && (
+                  <button
+                    type="button"
+                    onClick={handleDownloadBackup}
+                    className="bg-[#00B4D8] text-[#020612] px-6 py-3 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-[#90e0ef] transition-all cursor-pointer shadow-[0_0_20px_rgba(0,180,216,0.3)]"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download Backup & Continue</span>
+                  </button>
+                )}
 
-              {currentStep === 3 && (
-                <button type="button" onClick={handleBroadcastGenesis} className={styles.actionBtn}>
-                  <Globe className="w-4 h-4" />
-                  <span>Broadcast Genesis Tx to Testnet</span>
-                </button>
-              )}
+                {currentStep === 3 && (
+                  <button
+                    type="button"
+                    onClick={handleBroadcastGenesis}
+                    disabled={isBroadcasting}
+                    className="bg-emerald-500 text-[#020612] px-6 py-3 rounded-xl text-xs font-black flex items-center gap-2 hover:bg-emerald-400 transition-all cursor-pointer shadow-[0_0_20px_rgba(16,185,129,0.3)] disabled:opacity-50"
+                  >
+                    <Globe className={`w-4 h-4 ${isBroadcasting ? "animate-spin" : ""}`} />
+                    <span>{isBroadcasting ? "Broadcasting..." : "Broadcast Genesis to #lobby"}</span>
+                  </button>
+                )}
 
-              {currentStep === 4 && (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#10B981", fontSize: "12px", fontWeight: 800 }}>
-                  <ShieldCheck className="w-5 h-5" />
-                  <span>PERMANENTLY RECORDED ON TECHNOCORE TESTNET</span>
-                </div>
-              )}
+                {currentStep === 4 && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Identity Verified On-Chain</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -456,3 +509,5 @@ export const DidGenerator: React.FC = () => {
     </div>
   );
 };
+
+export default DidGenerator;
