@@ -37,26 +37,23 @@ export const DidGenerator: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    async function loadStoredIdentity() {
-      if (typeof window !== "undefined") {
-        const storedSeed = localStorage.getItem("flop_active_seed");
-        if (storedSeed) {
-          try {
-            const cleanSeed = storedSeed.replace(/[^0-9a-fA-F]/g, "");
-            if (cleanSeed.length === 64) {
-              const seedBytes = hexToBytes(cleanSeed);
-              const accurateDid = await deriveDidFromSeedBytes(seedBytes);
-              setDid(accurateDid);
-              setSeedHex(cleanSeed);
-              localStorage.setItem("flop_active_did", accurateDid);
-              localStorage.setItem("flop_active_seed", cleanSeed);
-              setCurrentStep(2);
-            }
-          } catch {}
-        }
+    if (typeof window !== "undefined") {
+      const storedSeed = localStorage.getItem("flop_active_seed");
+      if (storedSeed) {
+        try {
+          const cleanSeed = storedSeed.replace(/[^0-9a-fA-F]/g, "");
+          if (cleanSeed.length === 64) {
+            const seedBytes = hexToBytes(cleanSeed);
+            const accurateDid = deriveDidFromSeedBytes(seedBytes);
+            setDid(accurateDid);
+            setSeedHex(cleanSeed);
+            localStorage.setItem("flop_active_did", accurateDid);
+            localStorage.setItem("flop_active_seed", cleanSeed);
+            setCurrentStep(2);
+          }
+        } catch {}
       }
     }
-    loadStoredIdentity();
   }, []);
 
   const handleImportSubmit = async (e?: React.FormEvent) => {
@@ -83,7 +80,7 @@ export const DidGenerator: React.FC = () => {
       }
 
       const seedBytes = hexToBytes(cleanSeed);
-      const accurateDid = await deriveDidFromSeedBytes(seedBytes);
+      const accurateDid = deriveDidFromSeedBytes(seedBytes);
 
       setSeedHex(cleanSeed);
       setDid(accurateDid);
@@ -103,7 +100,7 @@ export const DidGenerator: React.FC = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = async (event) => {
+    reader.onload = (event) => {
       const content = event.target?.result as string;
       if (content) {
         setImportInput(content);
@@ -112,7 +109,7 @@ export const DidGenerator: React.FC = () => {
           if (parsed.seedHex) {
             const cleanSeed = parsed.seedHex.replace(/[^0-9a-fA-F]/g, "");
             const seedBytes = hexToBytes(cleanSeed);
-            const accurateDid = await deriveDidFromSeedBytes(seedBytes);
+            const accurateDid = deriveDidFromSeedBytes(seedBytes);
 
             setDid(accurateDid);
             setSeedHex(cleanSeed);

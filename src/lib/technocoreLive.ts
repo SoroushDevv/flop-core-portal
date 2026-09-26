@@ -1,4 +1,6 @@
-// Official Technocore Protocol Interface
+// Official Technocore Protocol Interface & TweetNaCl Engine
+import nacl from "tweetnacl";
+
 export const PROXY_BASE = "/api/technocore";
 
 const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -70,66 +72,24 @@ export interface GeneratedIdentity {
 }
 
 /**
- * Derives the exact cryptographic multicodec did:key from raw 32-byte Ed25519 seed
+ * Derives public key and multicodec did:key from raw 32-byte Ed25519 seed using TweetNaCl
  */
-export async function deriveDidFromSeedBytes(seedBytes: Uint8Array): Promise<string> {
-  const pkcs8Prefix = new Uint8Array([
-    0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70,
-    0x04, 0x22, 0x04, 0x20,
-  ]);
-  const fullPkcs8 = new Uint8Array(pkcs8Prefix.length + seedBytes.length);
-  fullPkcs8.set(pkcs8Prefix, 0);
-  fullPkcs8.set(seedBytes, pkcs8Prefix.length);
-
-  const privateKey = await crypto.subtle.importKey(
-    "pkcs8",
-    fullPkcs8 as BufferSource,
-    { name: "Ed25519" },
-    true,
-    ["sign"]
-  );
-
-  const jwk = await crypto.subtle.exportKey("jwk", privateKey);
-  if (jwk.x) {
-    const rawPubBase64 = jwk.x.replace(/-/g, "+").replace(/_/g, "/");
-    const binary = atob(rawPubBase64);
-    const pubBytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      pubBytes[i] = binary.charCodeAt(i);
-    }
-
-    const multicodec = new Uint8Array(2 + 32);
-    multicodec[0] = 0xed;
-    multicodec[1] = 0x01;
-    multicodec.set(pubBytes, 2);
-    return `did:key:z${base58Encode(multicodec)}`;
-  }
-
-  return `did:key:z6Mk${base58Encode(seedBytes)}`;
-}
-
-export async function generateEd25519Identity(): Promise<GeneratedIdentity> {
-  const keyPair = await window.crypto.subtle.generateKey(
-    { name: "Ed25519" },
-    true,
-    ["sign", "verify"]
-  );
-
-  const rawPubBuffer = await window.crypto.subtle.exportKey("raw", keyPair.publicKey);
-  const rawPubBytes = new Uint8Array(rawPubBuffer);
-
+export function deriveDidFromSeedBytes(seedBytes: Uint8Array): string {
+  const keyPair = nacl.sign.keyPair.fromSeed(seedBytes);
   const multicodec = new Uint8Array(2 + 32);
   multicodec[0] = 0xed;
   multicodec[1] = 0x01;
-  multicodec.set(rawPubBytes, 2);
+  multicodec.set(keyPair.publicKey, 2);
+  return `did:key:z${base58Encode(multicodec)}`;
+}
 
-  const did = `did:key:z${base58Encode(multicodec)}`;
-
-  const pkcs8Buffer = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
-  const pkcs8Bytes = new Uint8Array(pkcs8Buffer);
-  const rawSeed = pkcs8Bytes.slice(16, 48);
-  const seedHex = bytesToHex(rawSeed);
-
+/**
+ * Generates an authentic Ed25519 did:key using TweetNaCl
+ */
+export async function generateEd25519Identity(): Promise<GeneratedIdentity> {
+  const seedBytes = nacl.randomBytes(32);
+  const seedHex = bytesToHex(seedBytes);
+  const did = deriveDidFromSeedBytes(seedBytes);
   return { did, seedHex };
 }
 
@@ -204,7 +164,7 @@ export async function fetchMainnetRoomMessages(
 }
 
 /**
- * Dispatches a cryptographically signed message to Technocore
+ * Dispatches an authentic TweetNaCl-signed message to Technocore
  */
 export async function dispatchSignedMainnetMessage(
   room: string,
@@ -221,7 +181,8 @@ export async function dispatchSignedMainnetMessage(
       return { success: false, error: `Seed length must be 32 bytes (got ${seedBytes.length})` };
     }
 
-    const canonicalDid = cleanDidKey(rawDid);
+    // Always derive the exact matching did:key from the seed
+    const canonicalDid = deriveDidFromSeedBytes(seedBytes);
     const nonce = Date.now().toString();
 
     // Canonical signing payload: room|nonce|text
@@ -229,30 +190,10 @@ export async function dispatchSignedMainnetMessage(
     const encoder = new TextEncoder();
     const canonicalBytes = encoder.encode(canonical);
 
-    // Ed25519 PKCS8 DER Structure
-    const pkcs8Prefix = new Uint8Array([
-      0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70,
-      0x04, 0x22, 0x04, 0x20,
-    ]);
-    const fullPkcs8 = new Uint8Array(pkcs8Prefix.length + seedBytes.length);
-    fullPkcs8.set(pkcs8Prefix, 0);
-    fullPkcs8.set(seedBytes, pkcs8Prefix.length);
-
-    const privateKey = await crypto.subtle.importKey(
-      "pkcs8",
-      fullPkcs8 as BufferSource,
-      { name: "Ed25519" },
-      false,
-      ["sign"]
-    );
-
-    const sigBuffer = await crypto.subtle.sign(
-      "Ed25519",
-      privateKey,
-      canonicalBytes as BufferSource
-    );
-
-    const sigBase64Url = base64UrlEncode(new Uint8Array(sigBuffer));
+    // Pure TweetNaCl Ed25519 signing
+    const keyPair = nacl.sign.keyPair.fromSeed(seedBytes);
+    const sigBytes = nacl.sign.detached(canonicalBytes, keyPair.secretKey);
+    const sigBase64Url = base64UrlEncode(sigBytes);
 
     const endpoint = `${PROXY_BASE}/r/${encodeURIComponent(room)}/say-signed/${canonicalDid}/${sigBase64Url}/${nonce}/${encodeURIComponent(cleanText)}`;
 
